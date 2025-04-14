@@ -1,0 +1,16 @@
+patient,date,Height_cm,Weight_kg,BMI,Systolic_BP,Diastolic_BP,Heart_Rate,Smoking_Status,Health_Score,Risk_Level
+P-001,2023-01-01,156.6,66.9,27.3,106,68,67,Never smoker,77.7,Medium
+P-001,2023-04-01,156.6,61.0,24.9,154,82,83,Former smoker,50.1,High
+P-001,2023-06-30,156.6,68.9,28.1,136,94,99,Former smoker,48.9,High
+P-001,2023-09-28,156.6,74.6,30.4,134,96,73,Never smoker,74.6,Medium
+P-001,2023-12-27,156.6,53.2,21.7,102,60,64,Former smoker,75.7,Medium
+P-002,2023-01-01,180.0,73.4,22.7,138,86,68,Former smoker,79.3,Medium
+P-002,2023-04-01,180.0,63.9,19.7,159,72,91,Former smoker,37.7,High
+P-002,2023-06-30,180.0,73.3,22.6,138,91,63,Former smoker,74.4,Medium
+P-002,2023-09-28,180.0,67.8,20.9,144,74,88,Never smoker,56.9,High
+P-002,2023-12-27,180.0,73.6,22.7,135,72,91,Never smoker,63.3,Medium
+P-003,2023-01-01,181.2,78.2,23.8,127,61,65,Former smoker,86.2,Low
+P-003,2023-04-01,181.2,55.2,16.8,119,89,70,Current every day smoker,83.8,Low
+P-003,2023-06-30,181.2,67.7,20.6,157,87,84,Former smoker,47.6,High
+P-003,2023-09-28,181.2,63.0,19.2,156,86,72,Never smoker,59.2,High
+P-003,2023-12-27,181.2,66.7,20.3,140,62,98,Current every day smoker,40.3,High
