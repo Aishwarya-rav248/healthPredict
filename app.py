@@ -35,7 +35,7 @@ def show_dashboard(patient_id):
         return
 
     latest = patient_df.iloc[-1]
-    tab1, tab2 = st.tabs(["🩺 Overview", "📅 Visit History"])
+    tab1, tab2, tab3 = st.tabs(["🩺 Overview", "📅 Visit History", "🧠 Risk Predictor"])
 
     with tab1:
         st.markdown("### 👤 Patient Overview")
@@ -117,6 +117,47 @@ def show_dashboard(patient_id):
                 if str(row["Smoking_Status"]).lower().startswith("current"):
                     st.write("• Smoking – Join cessation programs for long-term benefits.")
 
+        # ---------------- RISK PREDICTOR TAB ----------------
+    with tab3:
+        st.markdown("### 🧠 Heart Disease Risk Predictor")
+
+        import joblib
+        import os
+
+        try:
+            if not os.path.exists("heart_disease_model.pkl"):
+                st.error("Model file not found. Please upload 'heart_disease_model.pkl'.")
+            else:
+                model = joblib.load("heart_disease_model.pkl")
+
+                input_df = pd.DataFrame([{
+                    "Height_cm": latest.get("Height_cm"),
+                    "BMI": latest.get("BMI"),
+                    "Weight_kg": latest.get("Weight_kg"),
+                    "Diastolic_BP": latest.get("Diastolic_BP"),
+                    "Heart_Rate": latest.get("Heart_Rate"),
+                    "Systolic_BP": latest.get("Systolic_BP"),
+                    "Diabetes": latest.get("Diabetes"),
+                    "Hyperlipidemia": latest.get("Hyperlipidemia"),
+                    "Smoking_Status": str(latest.get("Smoking_Status"))
+                }])
+
+                prediction = model.predict(input_df)[0]
+                confidence = model.predict_proba(input_df)[0][prediction] * 100
+
+                st.subheader("🩺 Prediction Result:")
+                if prediction == 1:
+                    st.error(f"⚠️ High Risk of Heart Disease ({confidence:.1f}% confidence)")
+                    st.write("- Schedule a full cardiac checkup")
+                    st.write("- Monitor blood pressure and cholesterol")
+                    st.write("- Adopt heart-healthy lifestyle immediately")
+                else:
+                    st.success(f"✅ Low Risk of Heart Disease ({confidence:.1f}% confidence)")
+                    st.write("- Maintain current lifestyle")
+                    st.write("- Keep regular health checkups")
+        except Exception as e:
+            st.error(f"Model error: {str(e)}")
+        
     st.markdown("---")
     if st.button("🔙 Back to Login"):
         st.session_state.logged_in = False
