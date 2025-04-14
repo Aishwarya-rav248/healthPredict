@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+import joblib
+import os
 
 st.set_page_config(page_title="Health Dashboard", layout="wide")
 
@@ -120,9 +122,6 @@ def show_dashboard(patient_id):
         # ---------------- RISK PREDICTOR TAB ----------------
     with tab3:
         st.markdown("### 🧠 Heart Disease Risk Predictor")
-
-        import joblib
-        import os
 
         try:
             if not os.path.exists("heart_disease_model.pkl"):
