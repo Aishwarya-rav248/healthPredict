@@ -125,29 +125,55 @@ def show_dashboard(patient_id):
             if str(latest["Smoking_Status"]).lower().startswith("current"):
                 st.write("• Smoking – Enroll in cessation programs for heart health.")
 
-    with tab2:
+        with tab2:
         st.markdown("## 📅 Visit History")
+
+        # Summary panel
+        total_visits = len(patient_df)
+        avg_score = round(patient_df["Health_Score"].mean(), 2)
+        high_risk_pct = (patient_df["Risk_Level"].str.lower() == "high").mean() * 100
+
+        st.info(f"**Total Visits:** {total_visits} | **Average Score:** {avg_score} | **High Risk Visits:** {high_risk_pct:.0f}%")
+
+        # Optional filter (by risk level)
+        risk_filter = st.selectbox("Filter by Risk Level", ["All", "Low", "Medium", "High"])
+        if risk_filter != "All":
+            patient_df = patient_df[patient_df["Risk_Level"].str.lower() == risk_filter.lower()]
+
+        # Health Score trend line
         st.line_chart(patient_df.set_index(pd.to_datetime(patient_df["date"]))["Health_Score"])
 
+        # Visit-wise cards
         for _, row in patient_df.iterrows():
-            with st.expander(f"Visit on {row['date']}"):
-                st.write(f"**Height:** {row['Height_cm']} cm")
-                st.write(f"**Weight:** {row['Weight_kg']} kg")
-                st.write(f"**BMI:** {row['BMI']}")
-                st.write(f"**Blood Pressure:** {row['Systolic_BP']}/{row['Diastolic_BP']}")
-                st.write(f"**Heart Rate:** {row['Heart_Rate']}")
-                st.write(f"**Smoking Status:** {row['Smoking_Status']}")
-                st.write(f"**Health Score:** {row['Health_Score']}")
-                st.write(f"**Risk Level:** {row['Risk_Level']}")
-                st.markdown("**Visit Recommendations:**")
-                if row["BMI"] < 18.5 or row["BMI"] > 25:
-                    st.write(f"• BMI: {row['BMI']} – Consider dietary adjustment or activity.")
-                if row["Heart_Rate"] > 90:
-                    st.write(f"• Heart Rate: {row['Heart_Rate']} bpm – Reduce stress and exercise.")
-                if row["Systolic_BP"] > 130:
-                    st.write(f"• Systolic BP: {row['Systolic_BP']} mmHg – Lower salt & monitor BP.")
-                if str(row["Smoking_Status"]).lower().startswith("current"):
-                    st.write("• Smoking – Quit for better heart & lung function.")
+            with st.container():
+                st.markdown(
+                    f"""
+                    <div style='border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 15px; background-color: #fafafa;'>
+                        <h5 style='margin-bottom: 8px;'>Visit on {row['date']}</h5>
+                        <div style='display: flex; justify-content: space-between; font-size: 14px;'>
+                            <div>
+                                <b>Height:</b> {row['Height_cm']} cm<br>
+                                <b>Weight:</b> {row['Weight_kg']} kg<br>
+                                <b>BMI:</b> {row['BMI']}<br>
+                                <b>Smoking Status:</b> {row['Smoking_Status']}
+                            </div>
+                            <div>
+                                <b>Blood Pressure:</b> {row['Systolic_BP']}/{row['Diastolic_BP']}<br>
+                                <b>Heart Rate:</b> {row['Heart_Rate']} bpm<br>
+                                <b>Health Score:</b> {row['Health_Score']}<br>
+                                <b>Risk Level:</b> <span style='color:white; background-color:{'red' if row['Risk_Level'].lower() == 'high' else 'green' if row['Risk_Level'].lower() == 'low' else 'orange'}; padding:2px 6px; border-radius:6px;'>{row['Risk_Level']}</span>
+                            </div>
+                        </div>
+                        <div style='margin-top: 10px;'>
+                            <b>Preventive Tips:</b><br>
+                            {'• BMI outside healthy range – adjust diet & activity.<br>' if row['BMI'] < 18.5 or row['BMI'] > 25 else ''}
+                            {'• High Heart Rate – reduce stress, exercise more.<br>' if row['Heart_Rate'] > 90 else ''}
+                            {'• High Blood Pressure – limit sodium, monitor BP.<br>' if row['Systolic_BP'] > 130 else ''}
+                            {'• Smoking – consider cessation support.<br>' if str(row['Smoking_Status']).lower().startswith("current") else ''}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True
+                )
 
     st.markdown("---")
     if st.button("🔙 Back to Login"):
