@@ -79,14 +79,14 @@ def show_dashboard(patient_id):
 
         col3, col4 = st.columns(2)
         with col3:
-            st.markdown("### 🧬 Health Score")
+            st.markdown("### Health Score")
             score = latest["Health_Score"]
             level = latest["Risk_Level"].lower()
             color = "#4caf50" if "low" in level else "#ffa94d" if "medium" in level else "#ff4d4d"
             st.plotly_chart(donut_chart("Score", score, color), use_container_width=True)
 
         with col4:
-            st.markdown("### 🧠 Heart Risk")
+            st.markdown("###  Heart Risk")
             try:
                 model = joblib.load("heart_disease_model.pkl")
                 input_df = pd.DataFrame([{
