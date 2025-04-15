@@ -52,7 +52,6 @@ def show_dashboard(patient_id):
 
     tab1, tab2 = st.tabs(["📊 Overview", "📅 Visit History"])
 
-    # --------- Overview Tab -------------
     with tab1:
         with st.sidebar:
             st.markdown("## 📅 Book an Appointment")
@@ -63,29 +62,30 @@ def show_dashboard(patient_id):
                 st.success(f"✅ Appointment booked with {doctor} on {appt_date.strftime('%b %d, %Y')}")
 
         st.markdown("## 🧑‍⚕️ Patient Overview")
-        c1, c2 = st.columns(2)
-        with c1:
+
+        col1, col2 = st.columns(2)
+        with col1:
             st.markdown("### 👤 Personal Info")
             st.markdown(f"- **Patient ID**: {patient_id}")
             st.markdown(f"- **Date**: {latest['date']}")
             st.markdown(f"- **Height**: {latest['Height_cm']} cm")
             st.markdown(f"- **Weight**: {latest['Weight_kg']} kg")
             st.markdown(f"- **Smoking**: {latest['Smoking_Status']}")
-        with c2:
+        with col2:
             st.markdown("### 📈 Key Metrics")
             st.metric("BMI", latest["BMI"])
             st.metric("Blood Pressure", f"{latest['Systolic_BP']}/{latest['Diastolic_BP']}")
             st.metric("Heart Rate", f"{latest['Heart_Rate']} bpm")
 
-        c3, c4 = st.columns(2)
-        with c3:
+        col3, col4 = st.columns(2)
+        with col3:
             st.markdown("### 🧬 Health Score")
             score = latest["Health_Score"]
             level = latest["Risk_Level"].lower()
             color = "#4caf50" if "low" in level else "#ffa94d" if "medium" in level else "#ff4d4d"
             st.plotly_chart(donut_chart("Score", score, color), use_container_width=True)
 
-        with c4:
+        with col4:
             st.markdown("### 🧠 Heart Risk")
             try:
                 model = joblib.load("heart_disease_model.pkl")
@@ -121,7 +121,6 @@ def show_dashboard(patient_id):
             if str(latest["Smoking_Status"]).lower().startswith("current"):
                 st.write("• Smoking – Enroll in cessation programs for heart health.")
 
-    # --------- Visit History Tab -------------
     with tab2:
         st.markdown("## 📅 Visit History")
         total_visits = len(patient_df)
@@ -133,16 +132,26 @@ def show_dashboard(patient_id):
         if risk_filter != "All":
             patient_df = patient_df[patient_df["Risk_Level"].str.lower() == risk_filter.lower()]
 
-        st.markdown("### 📈 Health Score Trend")
+        st.markdown("### 📊 Health Score Trend")
         st.line_chart(patient_df.set_index(pd.to_datetime(patient_df["date"]))["Health_Score"])
 
         for _, row in patient_df.iterrows():
             risk_color = "#ff4d4d" if row["Risk_Level"].lower() == "high" else "#4caf50" if row["Risk_Level"].lower() == "low" else "#ffa94d"
+            tips = []
+            if row["BMI"] < 18.5 or row["BMI"] > 25:
+                tips.append("• BMI outside healthy range – adjust diet & activity.")
+            if row["Heart_Rate"] > 90:
+                tips.append("• High Heart Rate – reduce stress, exercise more.")
+            if row["Systolic_BP"] > 130:
+                tips.append("• High BP – limit sodium, regular monitoring.")
+            if str(row["Smoking_Status"]).lower().startswith("current"):
+                tips.append("• Smoking – consider cessation support.")
+
             st.markdown(
                 f"""
-                <div style='border: 1px solid #ccc; border-radius: 10px; padding: 15px; margin-bottom: 20px; background-color: #f8f9fa; font-size: 14px;'>
-                    <h5 style='color:#333;'>🩺 Visit on {row['date']}</h5>
-                    <div style='display: flex; justify-content: space-between;'>
+                <div style='border:1px solid #ddd;border-radius:12px;padding:15px 20px;margin:15px 0;background-color:#fbfbfb'>
+                    <h5>🩺 Visit on {row['date']}</h5>
+                    <div style='display:flex;justify-content:space-between;font-size:14px;'>
                         <div>
                             <b>Height:</b> {row['Height_cm']} cm<br>
                             <b>Weight:</b> {row['Weight_kg']} kg<br>
@@ -150,30 +159,16 @@ def show_dashboard(patient_id):
                             <b>Smoking:</b> {row['Smoking_Status']}
                         </div>
                         <div>
-                            <b>Blood Pressure:</b> {row['Systolic_BP']}/{row['Diastolic_BP']}<br>
+                            <b>BP:</b> {row['Systolic_BP']}/{row['Diastolic_BP']}<br>
                             <b>Heart Rate:</b> {row['Heart_Rate']} bpm<br>
                             <b>Health Score:</b> {row['Health_Score']}<br>
-                            <b>Risk Level:</b> <span style='background-color:{risk_color}; color:white; padding:3px 6px; border-radius:5px;'>{row['Risk_Level']}</span>
+                            <b>Risk Level:</b> <span style='background-color:{risk_color};color:white;padding:2px 6px;border-radius:5px'>{row['Risk_Level']}</span>
                         </div>
                     </div>
-            """, unsafe_allow_html=True)
-
-            # Preventive tips per visit
-            tips = []
-            if row["BMI"] < 18.5 or row["BMI"] > 25:
-                tips.append("• Adjust BMI – Balanced diet & regular activity.")
-            if row["Heart_Rate"] > 90:
-                tips.append("• High Heart Rate – Exercise & stress management.")
-            if row["Systolic_BP"] > 130:
-                tips.append("• High BP – Limit salt, monitor regularly.")
-            if str(row["Smoking_Status"]).lower().startswith("current"):
-                tips.append("• Smoking – Consider cessation programs.")
-            if tips:
-                st.markdown("<b>🛡️ Preventive Tips:</b>", unsafe_allow_html=True)
-                for tip in tips:
-                    st.markdown(f"- {tip}")
-
-            st.markdown("</div>", unsafe_allow_html=True)
+                    {f"<div style='margin-top:12px;'><b>🛡️ Preventive Tips:</b><br>{'<br>'.join(tips)}</div>" if tips else ""}
+                </div>
+                """, unsafe_allow_html=True
+            )
 
     st.markdown("---")
     if st.button("🔙 Back to Login"):
@@ -181,7 +176,6 @@ def show_dashboard(patient_id):
         st.session_state.patient_id = ""
         st.rerun()
 
-# MAIN
 if st.session_state.logged_in:
     show_dashboard(st.session_state.patient_id)
 else:
