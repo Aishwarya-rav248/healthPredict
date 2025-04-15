@@ -38,7 +38,7 @@ def show_login():
         else:
             st.error("Invalid Patient ID. Please try again.")
 
-def donut_chart(label, value, color):
+def donut_chart(label, value, color, show_text=True):
     fig = go.Figure(data=[go.Pie(
         values=[value, 100 - value],
         hole=0.75,
@@ -47,11 +47,11 @@ def donut_chart(label, value, color):
     )])
     fig.update_layout(
         showlegend=False,
-        margin=dict(t=10, b=10, l=10, r=10),
         height=180,
         width=180,
+        margin=dict(t=0, b=0, l=0, r=0),
         annotations=[dict(
-            text=f"<b>{value:.0f}</b><br>{label}",
+            text=f"<b>{value:.1f}%</b><br>{label}" if show_text else "",
             font_size=14,
             showarrow=False
         )]
@@ -67,7 +67,6 @@ def show_dashboard(patient_id):
     with tab1:
         st.markdown("## 🧑‍⚕️ Patient Overview")
 
-        # Top row: Patient Info + Metrics
         c1, c2 = st.columns(2)
         with c1:
             st.markdown("### 👤 Personal Info")
@@ -82,17 +81,16 @@ def show_dashboard(patient_id):
             st.metric("Blood Pressure", f"{latest['Systolic_BP']}/{latest['Diastolic_BP']}")
             st.metric("Heart Rate", f"{latest['Heart_Rate']} bpm")
 
-        # Middle row: Donut Charts
         c3, c4 = st.columns(2)
         with c3:
             st.markdown("### 🧬 Health Score")
             score = latest["Health_Score"]
             risk_level = latest["Risk_Level"].lower()
             score_color = "#4caf50" if "low" in risk_level else "#ffa94d" if "medium" in risk_level else "#ff4d4d"
-            st.plotly_chart(donut_chart("Score", score, score_color), use_container_width=True)
+            st.plotly_chart(donut_chart("Health Score", score, score_color), use_container_width=True)
 
         with c4:
-            st.markdown("### 🧠 Heart Risk")
+            st.markdown("### ❤️ Heart Disease Risk")
             try:
                 model = joblib.load("heart_disease_model.pkl")
                 input_df = pd.DataFrame([{
@@ -108,12 +106,13 @@ def show_dashboard(patient_id):
                 }])
                 prediction = model.predict(input_df)[0]
                 confidence = model.predict_proba(input_df)[0][prediction] * 100
-                risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
-                st.plotly_chart(donut_chart("Risk", confidence, risk_color), use_container_width=True)
+                if prediction == 1:
+                    st.plotly_chart(donut_chart("High Risk", confidence, "#ff4d4d"), use_container_width=True)
+                else:
+                    st.plotly_chart(donut_chart("Low Risk", confidence, "#4caf50"), use_container_width=True)
             except Exception as e:
                 st.error(f"Risk model error: {e}")
 
-        # Bottom row: Preventive Measures
         st.markdown("### 🛡️ Preventive Measures")
         with st.container():
             bmi = latest["BMI"]
@@ -127,11 +126,10 @@ def show_dashboard(patient_id):
                 st.write(f"• Blood Pressure ({sys} mmHg) – Limit salt, regular checkups needed.")
             if str(latest["Smoking_Status"]).lower().startswith("current"):
                 st.write("• Smoking – Enroll in cessation programs for heart health.")
-    
+
     with tab2:
         st.markdown("## 📅 Visit History")
         st.line_chart(patient_df.set_index(pd.to_datetime(patient_df["date"]))["Health_Score"])
-
         for _, row in patient_df.iterrows():
             with st.expander(f"Visit on {row['date']}"):
                 st.write(f"**Height:** {row['Height_cm']} cm")
@@ -159,6 +157,7 @@ def show_dashboard(patient_id):
         st.session_state.patient_id = ""
         st.rerun()
 
+# MAIN
 if st.session_state.logged_in:
     show_dashboard(st.session_state.patient_id)
 else:
