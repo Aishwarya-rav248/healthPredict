@@ -47,7 +47,7 @@ def show_login():
             st.error("Invalid Patient ID. Please try again.")
 
 def show_dashboard(patient_id):
-    patient_df = df[df["patient"].astype(str) == patient_id].sort_values("date")
+    patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
     latest = patient_df.iloc[-1]
 
     tab1, tab2 = st.tabs(["📊 Overview", "📅 Visit History"])
