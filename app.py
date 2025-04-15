@@ -53,7 +53,7 @@ def show_dashboard(patient_id):
     tab1, tab2 = st.tabs(["📊 Overview", "📅 Visit History"])
 
     with tab1:
-        # Sidebar for calendar (ONLY in Overview tab)
+        # Calendar on sidebar (shown only in Overview)
         with st.sidebar:
             st.markdown("## 📅 Book an Appointment")
             doctor = st.selectbox("Select Doctor Type", ["Cardiologist", "General Physician", "Endocrinologist", "Dietician"])
@@ -64,7 +64,7 @@ def show_dashboard(patient_id):
 
         st.markdown("## 🧑‍⚕️ Patient Overview")
 
-        # Top row
+        # Personal Info + Metrics
         c1, c2 = st.columns(2)
         with c1:
             st.markdown("### 👤 Personal Info")
@@ -79,7 +79,7 @@ def show_dashboard(patient_id):
             st.metric("Blood Pressure", f"{latest['Systolic_BP']}/{latest['Diastolic_BP']}")
             st.metric("Heart Rate", f"{latest['Heart_Rate']} bpm")
 
-        # Middle row: Charts
+        # Health Score and Heart Risk
         c3, c4 = st.columns(2)
         with c3:
             st.markdown("### 🧬 Health Score")
@@ -110,8 +110,8 @@ def show_dashboard(patient_id):
             except Exception as e:
                 st.error(f"Risk model error: {e}")
 
-        # Bottom row: Preventive Measures
-        st.markdown("### Preventive Measures")
+        # Preventive Measures (Only once!)
+        st.markdown("### 🛡️ Preventive Measures")
         with st.container():
             bmi = latest["BMI"]
             hr = latest["Heart_Rate"]
@@ -125,31 +125,32 @@ def show_dashboard(patient_id):
             if str(latest["Smoking_Status"]).lower().startswith("current"):
                 st.write("• Smoking – Enroll in cessation programs for heart health.")
 
-        with tab2:
+    with tab2:
         st.markdown("## 📅 Visit History")
 
         # Summary panel
         total_visits = len(patient_df)
         avg_score = round(patient_df["Health_Score"].mean(), 2)
         high_risk_pct = (patient_df["Risk_Level"].str.lower() == "high").mean() * 100
-
         st.info(f"**Total Visits:** {total_visits} | **Average Score:** {avg_score} | **High Risk Visits:** {high_risk_pct:.0f}%")
 
-        # Optional filter (by risk level)
+        # Risk Level filter
         risk_filter = st.selectbox("Filter by Risk Level", ["All", "Low", "Medium", "High"])
         if risk_filter != "All":
             patient_df = patient_df[patient_df["Risk_Level"].str.lower() == risk_filter.lower()]
 
-        # Health Score trend line
+        # Line chart
+        st.markdown("### 📊 Health Score Trend")
         st.line_chart(patient_df.set_index(pd.to_datetime(patient_df["date"]))["Health_Score"])
 
-        # Visit-wise cards
+        # Visit Cards
         for _, row in patient_df.iterrows():
+            risk_color = "#ff4d4d" if row["Risk_Level"].lower() == "high" else "#4caf50" if row["Risk_Level"].lower() == "low" else "#ffa94d"
             with st.container():
                 st.markdown(
                     f"""
-                    <div style='border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 15px; background-color: #fafafa;'>
-                        <h5 style='margin-bottom: 8px;'>Visit on {row['date']}</h5>
+                    <div style='border: 1px solid #ddd; border-radius: 12px; padding: 15px 20px; margin-bottom: 20px; background-color: #f9f9f9;'>
+                        <h5 style='margin-bottom: 10px;'>🗓️ Visit on {row['date']}</h5>
                         <div style='display: flex; justify-content: space-between; font-size: 14px;'>
                             <div>
                                 <b>Height:</b> {row['Height_cm']} cm<br>
@@ -161,15 +162,15 @@ def show_dashboard(patient_id):
                                 <b>Blood Pressure:</b> {row['Systolic_BP']}/{row['Diastolic_BP']}<br>
                                 <b>Heart Rate:</b> {row['Heart_Rate']} bpm<br>
                                 <b>Health Score:</b> {row['Health_Score']}<br>
-                                <b>Risk Level:</b> <span style='color:white; background-color:{'red' if row['Risk_Level'].lower() == 'high' else 'green' if row['Risk_Level'].lower() == 'low' else 'orange'}; padding:2px 6px; border-radius:6px;'>{row['Risk_Level']}</span>
+                                <b>Risk Level:</b> <span style='background-color:{risk_color}; color:white; padding:2px 6px; border-radius:5px;'>{row['Risk_Level']}</span>
                             </div>
                         </div>
-                        <div style='margin-top: 10px;'>
-                            <b>Preventive Tips:</b><br>
-                            {'• BMI outside healthy range – adjust diet & activity.<br>' if row['BMI'] < 18.5 or row['BMI'] > 25 else ''}
-                            {'• High Heart Rate – reduce stress, exercise more.<br>' if row['Heart_Rate'] > 90 else ''}
-                            {'• High Blood Pressure – limit sodium, monitor BP.<br>' if row['Systolic_BP'] > 130 else ''}
-                            {'• Smoking – consider cessation support.<br>' if str(row['Smoking_Status']).lower().startswith("current") else ''}
+                        <div style='margin-top: 12px; font-size: 13px;'>
+                            <b>🛡️ Preventive Tips:</b><br>
+                            {"• BMI outside healthy range – adjust diet & activity.<br>" if row['BMI'] < 18.5 or row['BMI'] > 25 else ""}
+                            {"• High Heart Rate – reduce stress, exercise more.<br>" if row['Heart_Rate'] > 90 else ""}
+                            {"• High BP – limit sodium, regular monitoring.<br>" if row['Systolic_BP'] > 130 else ""}
+                            {"• Smoking – consider cessation support.<br>" if str(row['Smoking_Status']).lower().startswith("current") else ""}
                         </div>
                     </div>
                     """, unsafe_allow_html=True
