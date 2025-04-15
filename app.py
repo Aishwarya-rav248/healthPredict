@@ -127,35 +127,42 @@ def show_dashboard(patient_id):
         st.line_chart(patient_df.set_index(pd.to_datetime(patient_df["date"]))["Health_Score"])
 
         for _, row in patient_df.iterrows():
-            risk_color = "#ff4d4d" if row["Risk_Level"].lower() == "high" else "#4caf50" if row["Risk_Level"].lower() == "low" else "#ffa94d"
-            st.markdown(
-                f"""
-                <div style='border:1px solid #ddd; border-radius:12px; padding:15px 20px; margin:20px 0; background:#fcfcfc'>
-                    <div style='display:flex; justify-content:space-between; font-size:14px;'>
-                        <div style='flex:1;'>
-                            <h5>🗓️ Visit on {row['date']}</h5>
-                            • <b>Height:</b> {row['Height_cm']} cm<br>
-                            • <b>Weight:</b> {row['Weight_kg']} kg<br>
-                            • <b>BMI:</b> {row['BMI']}<br>
-                            • <b>Smoking Status:</b> {row['Smoking_Status']}
-                        </div>
-                        <div style='flex:1;'>
-                            • <b>Blood Pressure:</b> {row['Systolic_BP']}/{row['Diastolic_BP']}<br>
-                            • <b>Heart Rate:</b> {row['Heart_Rate']} bpm<br>
-                            • <b>Health Score:</b> {row['Health_Score']}<br>
-                            • <b>Risk Level:</b> <span style='background-color:{risk_color}; color:white; padding:2px 8px; border-radius:5px;'>{row['Risk_Level']}</span>
-                        </div>
-                    </div>
-                    <div style='margin-top:10px; font-size:13px;'>
-                        <b>🛡️ Preventive Tips:</b><br>
-                        {"• BMI outside healthy range – adjust diet & activity.<br>" if row['BMI'] < 18.5 or row['BMI'] > 25 else ""}
-                        {"• High Heart Rate – reduce stress, exercise more.<br>" if row['Heart_Rate'] > 90 else ""}
-                        {"• High BP – limit sodium, regular monitoring.<br>" if row['Systolic_BP'] > 130 else ""}
-                        {"• Smoking – consider cessation support.<br>" if str(row['Smoking_Status']).lower().startswith("current") else ""}
-                    </div>
+    risk_color = "#ff4d4d" if row["Risk_Level"].lower() == "high" else "#4caf50" if row["Risk_Level"].lower() == "low" else "#ffa94d"
+
+    # Build preventive tips dynamically as plain string
+    tips = ""
+    if row['BMI'] < 18.5 or row['BMI'] > 25:
+        tips += "• BMI outside healthy range – adjust diet & activity.<br>"
+    if row['Heart_Rate'] > 90:
+        tips += "• High Heart Rate – reduce stress, exercise more.<br>"
+    if row['Systolic_BP'] > 130:
+        tips += "• High BP – limit sodium, regular monitoring.<br>"
+    if str(row['Smoking_Status']).lower().startswith("current"):
+        tips += "• Smoking – consider cessation support.<br>"
+
+    st.markdown(
+        f"""
+        <div style='border:1px solid #ddd; border-radius:12px; padding:15px 20px; margin:20px 0; background:#fcfcfc'>
+            <div style='display:flex; justify-content:space-between; font-size:14px;'>
+                <div style='flex:1;'>
+                    <h5>🗓️ Visit on {row['date']}</h5>
+                    • <b>Height:</b> {row['Height_cm']} cm<br>
+                    • <b>Weight:</b> {row['Weight_kg']} kg<br>
+                    • <b>BMI:</b> {row['BMI']}<br>
+                    • <b>Smoking Status:</b> {row['Smoking_Status']}
                 </div>
-                """, unsafe_allow_html=True
-            )
+                <div style='flex:1;'>
+                    • <b>Blood Pressure:</b> {row['Systolic_BP']}/{row['Diastolic_BP']}<br>
+                    • <b>Heart Rate:</b> {row['Heart_Rate']} bpm<br>
+                    • <b>Health Score:</b> {row['Health_Score']}<br>
+                    • <b>Risk Level:</b> <span style='background-color:{risk_color}; color:white; padding:2px 8px; border-radius:5px;'>{row['Risk_Level']}</span>
+                </div>
+            </div>
+            {"<div style='margin-top:10px; font-size:13px;'><b>🛡️ Preventive Tips:</b><br>" + tips + "</div>" if tips else ""}
+        </div>
+        """, unsafe_allow_html=True
+    )
+
 
     if st.button("🔙 Back to Login"):
         st.session_state.logged_in = False
