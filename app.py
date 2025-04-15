@@ -35,7 +35,7 @@ def donut_chart(label, value, color, show_score=True):
     return fig
 
 def show_login():
-    st.title("Welcome to HealthPredict 🩺")
+    st.title("Welcome to HealthPredict")
     st.subheader("Login with your Patient ID")
     patient_id = st.text_input("Enter Patient ID")
     if st.button("Login"):
@@ -79,14 +79,14 @@ def show_dashboard(patient_id):
 
         c3, c4 = st.columns(2)
         with c3:
-            st.markdown("### 🧬 Health Score")
+            st.markdown("### Health Score")
             score = latest["Health_Score"]
             level = latest["Risk_Level"].lower()
             color = "#4caf50" if "low" in level else "#ffa94d" if "medium" in level else "#ff4d4d"
             st.plotly_chart(donut_chart("Score", score, color), use_container_width=True)
 
         with c4:
-            st.markdown("### 🧠 Heart Risk")
+            st.markdown("### Heart Risk")
             try:
                 model = joblib.load("heart_disease_model.pkl")
                 input_df = pd.DataFrame([{
