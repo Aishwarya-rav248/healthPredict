@@ -67,7 +67,7 @@ def show_dashboard(patient_id):
         with c1:
             st.markdown("### 👤 Personal Info")
             st.markdown(f"- **Patient ID**: {patient_id}")
-            st.markdown(f"- **Date**: {latest['date']}")
+            st.markdown(f"- **Date**: {latest['Date']}")
             st.markdown(f"- **Height**: {latest['Height_cm']} cm")
             st.markdown(f"- **Weight**: {latest['Weight_kg']} kg")
             st.markdown(f"- **Smoking**: {latest['Smoking_Status']}")
@@ -129,10 +129,10 @@ def show_dashboard(patient_id):
         st.info(f"**Total Visits:** {total_visits} | **Average Score:** {avg_score} | **High Risk Visits:** {high_risk_pct:.0f}%")
 
         metric_choice = st.selectbox("Choose metric to view trend", ["BMI", "Health_Score", "Heart_Rate", "Systolic_BP", "Diastolic_BP"])
-        st.line_chart(patient_df.set_index(pd.to_datetime(patient_df["date"]))[metric_choice])
+        st.line_chart(patient_df.set_index(pd.to_datetime(patient_df["Date"]))["Health_Score"])
 
         for _, row in patient_df.iterrows():
-            st.markdown(f"### 🗓️ Visit on {row['date']}")
+            st.markdown(f"### 🗓️ Visit on {row['Date']}")
             st.markdown(
                 f"- Height: {row['Height_cm']} cm\n"
                 f"- Weight: {row['Weight_kg']} kg\n"
