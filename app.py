@@ -128,7 +128,7 @@ def show_dashboard(patient_id):
 
     # 📅 Visit History
     with tab2:
-        st.markdown("## 📅 Visit History")
+         st.markdown("### 📅 Visit History")
         st.line_chart(patient_df.set_index(pd.to_datetime(patient_df["date"]))["Health_Score"])
 
         for _, row in patient_df.iterrows():
@@ -136,11 +136,21 @@ def show_dashboard(patient_id):
                 st.write(f"**Height:** {row['Height_cm']} cm")
                 st.write(f"**Weight:** {row['Weight_kg']} kg")
                 st.write(f"**BMI:** {row['BMI']}")
-                st.write(f"**BP:** {row['Systolic_BP']}/{row['Diastolic_BP']}")
-                st.write(f"**Heart Rate:** {row['Heart_Rate']} bpm")
-                st.write(f"**Smoking:** {row['Smoking_Status']}")
+                st.write(f"**Blood Pressure:** {row['Systolic_BP']}/{row['Diastolic_BP']}")
+                st.write(f"**Heart Rate:** {row['Heart_Rate']}")
+                st.write(f"**Smoking Status:** {row['Smoking_Status']}")
                 st.write(f"**Health Score:** {row['Health_Score']}")
                 st.write(f"**Risk Level:** {row['Risk_Level']}")
+
+                st.markdown("**Preventive Tips:**")
+                if row["BMI"] < 18.5 or row["BMI"] > 25:
+                    st.write(f"• BMI: {row['BMI']} – Consider diet or physical activity changes.")
+                if row["Heart_Rate"] > 90:
+                    st.write(f"• Heart Rate: {row['Heart_Rate']} bpm – Try meditation, exercise.")
+                if row["Systolic_BP"] > 130:
+                    st.write(f"• Blood Pressure: {row['Systolic_BP']} mmHg – Reduce sodium intake.")
+                if str(row["Smoking_Status"]).lower().startswith("current"):
+                    st.write("• Smoking – Join cessation programs for long-term benefits.")
 
     if st.button("🔙 Back to Login"):
         st.session_state.logged_in = False
