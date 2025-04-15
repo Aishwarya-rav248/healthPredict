@@ -35,7 +35,7 @@ def donut_chart(label, value, color, show_score=True):
     return fig
 
 def show_login():
-    st.title("Welcome to HealthPredict 🩺")
+    st.title("Welcome to HealthPredict")
     st.subheader("Login with your Patient ID")
     patient_id = st.text_input("Enter Patient ID")
     if st.button("Login"):
@@ -61,7 +61,7 @@ def show_dashboard(patient_id):
             if st.button("Book Appointment"):
                 st.success(f"✅ Appointment booked with {doctor} on {appt_date.strftime('%b %d, %Y')}")
 
-        st.markdown("## 🧑‍⚕️ Patient Overview")
+        st.markdown("## Patient Overview")
 
         col1, col2 = st.columns(2)
         with col1:
@@ -107,7 +107,7 @@ def show_dashboard(patient_id):
             except Exception as e:
                 st.error(f"Risk model error: {e}")
 
-        st.markdown("### 🛡️ Preventive Measures")
+        st.markdown("### Preventive Measures")
         with st.container():
             bmi = latest["BMI"]
             hr = latest["Heart_Rate"]
@@ -122,7 +122,7 @@ def show_dashboard(patient_id):
                 st.write("• Smoking – Enroll in cessation programs for heart health.")
 
     with tab2:
-        st.markdown("## 📅 Visit History")
+        st.markdown("## Visit History")
         total_visits = len(patient_df)
         avg_score = round(patient_df["Health_Score"].mean(), 2)
         high_risk_pct = (patient_df["Risk_Level"].str.lower() == "high").mean() * 100
@@ -132,7 +132,7 @@ def show_dashboard(patient_id):
         if risk_filter != "All":
             patient_df = patient_df[patient_df["Risk_Level"].str.lower() == risk_filter.lower()]
 
-        st.markdown("### 📊 Health Score Trend")
+        st.markdown("### Health Score Trend")
         st.line_chart(patient_df.set_index(pd.to_datetime(patient_df["date"]))["Health_Score"])
 
         for _, row in patient_df.iterrows():
