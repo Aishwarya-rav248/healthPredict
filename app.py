@@ -128,8 +128,17 @@ def show_dashboard(patient_id):
         high_risk_pct = (patient_df["Risk_Level"].str.lower() == "high").mean() * 100
         st.info(f"**Total Visits:** {total_visits} | **Avg Score:** {avg_score} | **High Risk Visits:** {high_risk_pct:.0f}%")
 
-        metric_choice = st.selectbox("Choose metric to visualize", ["Health Score", "BMI", "Systolic_BP", "Diastolic_BP", "Heart_Rate"])
-        st.line_chart(patient_df.set_index(pd.to_datetime(patient_df["date"]))[metric_choice])
+        metric_options = {
+    "Health Score": "Health_Score",
+    "BMI": "BMI",
+    "Systolic BP": "Systolic_BP",
+    "Diastolic BP": "Diastolic_BP",
+    "Heart Rate": "Heart_Rate"
+}
+metric_label = st.selectbox("Choose metric to visualize", list(metric_options.keys()))
+metric_column = metric_options[metric_label]
+
+st.line_chart(patient_df.set_index(pd.to_datetime(patient_df["date"]))[metric_column])
 
         for _, row in patient_df.iterrows():
             risk_color = "#ff4d4d" if row["Risk_Level"].lower() == "high" else "#4caf50" if row["Risk_Level"].lower() == "low" else "#ffa94d"
