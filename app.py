@@ -36,7 +36,7 @@ def donut_chart(label, value, color, show_score=True):
     return fig
 
 def show_login():
-    st.title("Welcome to HealthPredict 🩺")
+    st.title("Welcome to HealthPredict")
     st.subheader("Login with your Patient ID")
     patient_id = st.text_input("Enter Patient ID")
     if st.button("Login"):
