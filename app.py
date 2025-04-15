@@ -61,7 +61,7 @@ def show_dashboard(patient_id):
             if st.button("Book Appointment"):
                 st.success(f"✅ Appointment booked with {doctor} on {appt_date.strftime('%b %d, %Y')}")
 
-        st.markdown("## 🧑‍⚕️ Patient Overview")
+        st.markdown("## Patient Overview")
 
         c1, c2 = st.columns(2)
         with c1:
