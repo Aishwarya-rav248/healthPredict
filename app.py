@@ -1,10 +1,11 @@
+
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import joblib
 import os
 
-st.set_page_config(page_title="HealthPredict Dashboard", layout="wide")
+st.set_page_config(page_title="Health Dashboard", layout="wide")
 
 @st.cache_data
 def load_data():
@@ -39,33 +40,36 @@ def show_dashboard(patient_id):
     latest = patient_df.iloc[-1]
     tab1, tab2 = st.tabs(["📊 Overview", "📅 Visit History"])
 
-    # ---------------- OVERVIEW PAGE ----------------
     with tab1:
-        st.markdown("## 👤 Patient Overview")
+        st.markdown("<h2 style='margin-bottom:0;'>📘 Patient Overview</h2>", unsafe_allow_html=True)
+        st.markdown("---")
 
-        top1, top2 = st.columns([2, 1])
+        col1, col2 = st.columns(2)
 
-        with top1:
-            st.markdown("### Personal Info")
-            st.write(f"**Patient ID:** {patient_id}")
-            st.write(f"**Visit Date:** {latest['date']}")
-            st.write(f"**Height:** {latest['Height_cm']} cm")
-            st.write(f"**Weight:** {latest['Weight_kg']} kg")
-            st.write(f"**Smoking Status:** {latest['Smoking_Status']}")
+        with col1:
+            st.markdown("#### Personal Info")
+            st.markdown(f"<div style='padding:10px;background-color:#f9f9f9;border-radius:10px;'>"
+                        f"<b>Patient ID:</b> {patient_id}<br>"
+                        f"<b>Visit Date:</b> {latest['date']}<br>"
+                        f"<b>Height:</b> {latest['Height_cm']} cm<br>"
+                        f"<b>Weight:</b> {latest['Weight_kg']} kg<br>"
+                        f"<b>Smoking Status:</b> {latest['Smoking_Status']}"
+                        f"</div>", unsafe_allow_html=True)
 
-        with top2:
-            st.markdown("### Health Metrics")
-            st.metric("BMI", latest["BMI"])
-            st.metric("Blood Pressure", f"{latest['Systolic_BP']}/{latest['Diastolic_BP']}")
-            st.metric("Heart Rate", latest["Heart_Rate"])
-            st.metric("Risk Level", latest["Risk_Level"])
+        with col2:
+            st.markdown("#### Health Metrics")
+            st.markdown(f"<div style='padding:10px;background-color:#f9f9f9;border-radius:10px;'>"
+                        f"<b>BMI:</b> {latest['BMI']}<br>"
+                        f"<b>Blood Pressure:</b> {latest['Systolic_BP']}/{latest['Diastolic_BP']}<br>"
+                        f"<b>Heart Rate:</b> {latest['Heart_Rate']}<br>"
+                        f"<b>Risk Level:</b> {latest['Risk_Level']}"
+                        f"</div>", unsafe_allow_html=True)
 
-        st.divider()
+        st.markdown("---")
+        col3, col4 = st.columns([2, 1])
 
-        mid1, mid2 = st.columns([1, 1])
-
-        with mid1:
-            st.markdown("### 🧠 Heart Disease Risk Predictor")
+        with col3:
+            st.markdown("#### 🧠 Heart Disease Risk Predictor")
             try:
                 if not os.path.exists("heart_disease_model.pkl"):
                     st.error("Model file not found. Please upload 'heart_disease_model.pkl'.")
@@ -94,12 +98,11 @@ def show_dashboard(patient_id):
             except Exception as e:
                 st.error(f"Model error: {str(e)}")
 
-        with mid2:
-            st.markdown("### 💯 Health Score")
+        with col4:
+            st.markdown("#### 💯 Health Score")
             health_score = latest["Health_Score"]
             risk_level = latest["Risk_Level"].lower()
             color = "#4caf50" if "low" in risk_level else "#ffa94d" if "medium" in risk_level else "#ff4d4d"
-
             fig = go.Figure(data=[go.Pie(
                 values=[health_score, 100 - health_score],
                 hole=0.65,
@@ -108,7 +111,7 @@ def show_dashboard(patient_id):
             )])
             fig.update_layout(
                 showlegend=False,
-                height=250,
+                height=260,
                 annotations=[dict(
                     text=f"<b>{health_score}</b><br>Score",
                     font_size=18,
@@ -118,49 +121,44 @@ def show_dashboard(patient_id):
             )
             st.plotly_chart(fig, use_container_width=True)
 
-        st.divider()
+        st.markdown("#### 🛡️ Preventive Measures")
+        bmi = latest["BMI"]
+        hr = latest["Heart_Rate"]
+        sys = latest["Systolic_BP"]
 
-        st.markdown("### 🛡️ Preventive Measures")
-        if latest["BMI"] < 18.5 or latest["BMI"] > 25:
-            st.write(f"• Adjust BMI (Current: {latest['BMI']}) – Balanced diet & exercise recommended.")
-        if latest["Heart_Rate"] > 90:
-            st.write(f"• High Heart Rate ({latest['Heart_Rate']} bpm) – Practice stress relief and exercise.")
-        if latest["Systolic_BP"] > 130:
-            st.write(f"• Elevated Blood Pressure ({latest['Systolic_BP']} mmHg) – Reduce salt, exercise regularly.")
-        if str(latest["Smoking_Status"]).lower().startswith("current"):
-            st.write("• Smoking Cessation – Enroll in quit programs and seek support.")
+        if bmi < 18.5 or bmi > 25:
+            st.write(f"• Adjust BMI (Current: {bmi}) – Balanced diet & exercise recommended.")
+        if hr > 90:
+            st.write(f"• Reduce Heart Rate ({hr} bpm) – Consider stress management & exercise.")
+        if sys > 130:
+            st.write(f"• Manage Blood Pressure ({sys} mmHg) – Reduce salt, exercise regularly.")
+        if latest["Smoking_Status"].lower().startswith("current"):
+            st.write("• Smoking Cessation – Enroll in quit smoking programs.")
 
-    # ---------------- VISIT HISTORY TAB ----------------
     with tab2:
-        st.markdown("## 🕒 Patient Visit History")
-        trend_df = patient_df[["date", "Health_Score"]].dropna()
-        trend_df["date"] = pd.to_datetime(trend_df["date"])
-
-        if not trend_df.empty:
-            st.line_chart(trend_df.set_index("date"))
-        else:
-            st.warning("No Health Score data available over time.")
+        st.markdown("### 📅 Visit History")
+        st.line_chart(patient_df.set_index(pd.to_datetime(patient_df["date"]))["Health_Score"])
 
         for _, row in patient_df.iterrows():
-            with st.expander(f"📅 Visit on {row['date']}"):
+            with st.expander(f"Visit on {row['date']}"):
                 st.write(f"**Height:** {row['Height_cm']} cm")
                 st.write(f"**Weight:** {row['Weight_kg']} kg")
                 st.write(f"**BMI:** {row['BMI']}")
-                st.write(f"**BP:** {row['Systolic_BP']}/{row['Diastolic_BP']}")
+                st.write(f"**Blood Pressure:** {row['Systolic_BP']}/{row['Diastolic_BP']}")
                 st.write(f"**Heart Rate:** {row['Heart_Rate']}")
-                st.write(f"**Smoking:** {row['Smoking_Status']}")
+                st.write(f"**Smoking Status:** {row['Smoking_Status']}")
                 st.write(f"**Health Score:** {row['Health_Score']}")
                 st.write(f"**Risk Level:** {row['Risk_Level']}")
 
                 st.markdown("**Preventive Tips:**")
                 if row["BMI"] < 18.5 or row["BMI"] > 25:
-                    st.write(f"• BMI {row['BMI']} – Optimize weight via lifestyle changes.")
+                    st.write(f"• BMI: {row['BMI']} – Consider diet or physical activity changes.")
                 if row["Heart_Rate"] > 90:
-                    st.write(f"• Heart Rate {row['Heart_Rate']} – Encourage regular monitoring.")
+                    st.write(f"• Heart Rate: {row['Heart_Rate']} bpm – Try meditation, exercise.")
                 if row["Systolic_BP"] > 130:
-                    st.write(f"• Blood Pressure {row['Systolic_BP']} mmHg – Reduce sodium intake.")
+                    st.write(f"• Blood Pressure: {row['Systolic_BP']} mmHg – Reduce sodium intake.")
                 if str(row["Smoking_Status"]).lower().startswith("current"):
-                    st.write("• Smoking – Strongly recommend quitting support.")
+                    st.write("• Smoking – Join cessation programs for long-term benefits.")
 
     st.markdown("---")
     if st.button("🔙 Back to Login"):
@@ -168,7 +166,7 @@ def show_dashboard(patient_id):
         st.session_state.patient_id = ""
         st.rerun()
 
-# --------------- MAIN ------------------
+# MAIN
 if st.session_state.logged_in:
     show_dashboard(st.session_state.patient_id)
 else:
