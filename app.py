@@ -10,8 +10,7 @@ st.set_page_config(page_title="Health Dashboard", layout="wide")
 @st.cache_data
 def load_data():
     df = pd.read_csv("Cleaned Dataset.csv")
-    df["Date"] = pd.to_datetime(df["Date"])
-    df["Risk_Level"] = df["Health_Score"].apply(lambda score: "Low" if score >= 85 else "Medium" if score >= 70 else "High")
+    st.write("Columns in the dataset:", df.columns.tolist())  # Add this line to show all column names
     return df
 
 df = load_data()
@@ -50,7 +49,8 @@ def show_login():
             st.error("Invalid Patient ID. Please try again.")
 
 def show_dashboard(patient_id):
-    patient_df = df[df["Patient_ID"].astype(str) == patient_id].sort_values("Date")
+    
+    patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
     latest = patient_df.iloc[-1]
     level = latest["Risk_Level"]
 
