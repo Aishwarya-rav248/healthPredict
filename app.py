@@ -62,11 +62,11 @@ def show_dashboard(patient_id):
             if st.button("Book Appointment"):
                 st.success(f"✅ Appointment booked with {doctor} on {appt_date.strftime('%b %d, %Y')}")
 
-        st.markdown("## 🧑‍⚕️ Patient Overview")
+        st.markdown("## Patient Overview")
 
         c1, c2 = st.columns(2)
         with c1:
-            st.markdown("### 👤 Personal Info")
+            st.markdown("### Personal Info")
             st.markdown(f"- **Patient ID**: {patient_id}")
             st.markdown(f"- **Date**: {latest['Date']}")
             st.markdown(f"- **Height**: {latest['Height_cm']} cm")
