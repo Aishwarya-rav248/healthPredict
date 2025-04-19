@@ -37,6 +37,9 @@ def donut_chart(label, value, color, show_score=True):
 
 def plot_feature_importance(model, feature_names):
     importances = model.named_steps["classifier"].feature_importances_
+    if len(importances) != len(feature_names):
+        st.error("Feature mismatch in importance chart. Check model input features.")
+        return
     fig, ax = plt.subplots(figsize=(6, 4))
     ax.barh(feature_names, importances, color="#4caf50")
     ax.set_title("Heart Risk - Feature Importance")
@@ -117,10 +120,10 @@ def show_dashboard(patient_id):
                 color = "#ff4d4d" if prediction == 1 else "#4caf50"
                 st.plotly_chart(donut_chart(label, 50, color, show_score=False), use_container_width=True)
 
-                # Feature importance chart
                 st.markdown("### 🔍 Risk Score Influencers")
-                plot_feature_importance(model, input_df.columns.tolist())
-
+                feature_names = ["Height_cm", "BMI", "Weight_kg", "Diastolic_BP", "Heart_Rate",
+                                 "Systolic_BP", "Diabetes", "Hyperlipidemia", "Smoking_Status"]
+                plot_feature_importance(model, feature_names)
             except Exception as e:
                 st.error(f"Model error: {e}")
 
