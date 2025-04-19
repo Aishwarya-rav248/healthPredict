@@ -9,13 +9,15 @@ st.set_page_config(page_title="Health Dashboard", layout="wide")
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("final_cleaned_dataset.csv")
+    df = pd.read_csv("Cleaned Dataset.csv")
     df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
     return df
 
 df = load_data()
 
-# ------------------ Helper Functions ------------------
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+    st.session_state.patient_id = ""
 
 def donut_chart(label, value, color, show_score=True):
     text = f"<b>{value:.0f}</b><br>{label}" if show_score else f"<b>{label}</b>"
@@ -34,12 +36,6 @@ def donut_chart(label, value, color, show_score=True):
     )
     return fig
 
-# ------------------ Login ------------------
-
-if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = False
-    st.session_state.patient_id = ""
-
 def show_login():
     st.title("Welcome to HealthPredict 🩺")
     patient_id = st.text_input("Enter Patient ID")
@@ -51,15 +47,11 @@ def show_login():
         else:
             st.error("Invalid Patient ID. Please try again.")
 
-# ------------------ Dashboard ------------------
-
 def show_dashboard(patient_id):
     patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
     latest = patient_df.iloc[-1]
 
     tab1, tab2 = st.tabs(["📊 Overview", "📅 Visit History"])
-
-    # -------------------- Overview --------------------
 
     with tab1:
         with st.sidebar:
@@ -124,8 +116,6 @@ def show_dashboard(patient_id):
             if str(latest["Smoking_Status"]).lower().startswith("current"):
                 st.write("• Smoking – Enroll in cessation program.")
 
-    # -------------------- Visit History --------------------
-
     with tab2:
         st.markdown("## 📅 Visit History")
         st.info(f"Total Visits: {len(patient_df)} | Avg. Score: {round(patient_df['Health_Score'].mean(), 1)}")
@@ -136,17 +126,24 @@ def show_dashboard(patient_id):
         for _, row in patient_df.iterrows():
             risk = "High" if row["Heart_Disease"] == 1 else "Low"
             color = "#ff4d4d" if row["Heart_Disease"] == 1 else "#4caf50"
+            tips = []
+            if row["BMI"] < 18.5 or row["BMI"] > 25:
+                tips.append("• Adjust BMI")
+            if row["Heart_Rate"] > 90:
+                tips.append("• High Heart Rate")
+            if row["Systolic_BP"] > 130:
+                tips.append("• High Blood Pressure")
+            if str(row["Smoking_Status"]).lower().startswith("current"):
+                tips.append("• Smoking Cessation")
+            tips_html = "<br>".join(tips)
+
             st.markdown(
                 f"""<div style='border:1px solid #ccc;border-radius:10px;padding:10px;margin:10px 0;background:#f9f9f9;'>
                 <b>🗓 Visit Date:</b> {row['Date'].split()[0]}<br>
                 <b>Height:</b> {row['Height_cm']} cm | <b>Weight:</b> {row['Weight_kg']} kg | <b>BMI:</b> {row['BMI']}<br>
                 <b>BP:</b> {row['Systolic_BP']}/{row['Diastolic_BP']} | <b>Heart Rate:</b> {row['Heart_Rate']} bpm<br>
                 <b>Health Score:</b> {row['Health_Score']} | <b>Heart Risk:</b> <span style='background:{color};color:white;padding:2px 5px;border-radius:4px;'>{risk}</span><br>
-                <b>🛡️ Tips:</b><br>
-                {"• Adjust BMI<br>" if row['BMI'] < 18.5 or row['BMI'] > 25 else ""}
-                {"• High Heart Rate<br>" if row['Heart_Rate'] > 90 else ""}
-                {"• High Blood Pressure<br>" if row['Systolic_BP'] > 130 else ""}
-                {"• Smoking Cessation<br>" if str(row['Smoking_Status']).lower().startswith("current") else ""}
+                <b>🛡️ Tips:</b><br>{tips_html}
                 </div>
                 """, unsafe_allow_html=True
             )
@@ -155,8 +152,6 @@ def show_dashboard(patient_id):
         st.session_state.logged_in = False
         st.session_state.patient_id = ""
         st.rerun()
-
-# ------------------ Run App ------------------
 
 if st.session_state.logged_in:
     show_dashboard(st.session_state.patient_id)
