@@ -104,7 +104,7 @@ def show_dashboard(patient_id):
             st.markdown("### 🧠 Heart Risk")
             try:
                 model = joblib.load("heart_disease_model.pkl")
-                feature_names = model.named_steps['preprocessor'].get_feature_names_out()
+                feature_names = ["Height_cm", "BMI", "Weight_kg", "Diastolic_BP","Heart_Rate", "Systolic_BP", "Diabetes", "Hyperlipidemia", "Smoking_Status"]
 
                 input_df = pd.DataFrame([{
                     "Height_cm": latest["Height_cm"],
