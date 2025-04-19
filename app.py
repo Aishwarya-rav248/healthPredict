@@ -102,16 +102,15 @@ def show_dashboard(patient_id):
             try:
                 model = joblib.load("heart_disease_model (1).pkl")
                 input_df = pd.DataFrame([{
-                    "Height_cm": latest["Height_cm"],
                     "BMI": latest["BMI"],
-                    "Weight_kg": latest["Weight_kg"],
+                    "Systolic_BP": latest["Systolic_BP"],
                     "Diastolic_BP": latest["Diastolic_BP"],
                     "Heart_Rate": latest["Heart_Rate"],
-                    "Systolic_BP": latest["Systolic_BP"],
+                    "Smoking_Status": str(latest["Smoking_Status"]),
                     "Diabetes": latest["Diabetes"],
-                    "Hyperlipidemia": latest["Hyperlipidemia"],
-                    "Smoking_Status": str(latest["Smoking_Status"])
-                }])
+                    "Hyperlipidemia": latest["Hyperlipidemia"]
+               }])
+
                 prediction = model.predict(input_df)[0]
                 label = "High Risk" if prediction == 1 else "Low Risk"
                 color = "#ff4d4d" if prediction == 1 else "#4caf50"
