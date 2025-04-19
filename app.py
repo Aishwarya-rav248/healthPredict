@@ -87,7 +87,7 @@ def show_dashboard(patient_id):
         with c4:
             st.markdown("### Heart Risk")
             try:
-                model = joblib.load("heart_disease_model.pkl")
+                model = joblib.load("heart_disease_model_all_features.pkl")
                 input_df = pd.DataFrame([{
                     "Height_cm": latest.get("Height_cm"),
                     "BMI": latest.get("BMI"),
@@ -133,20 +133,31 @@ def show_dashboard(patient_id):
         for _, row in patient_df.iterrows():
             risk_color = "#ff4d4d" if row["Heart_Disease"] == 1 else "#4caf50"
             with st.container():
+                tips = []
+                if row["BMI"] < 18.5 or row["BMI"] > 25:
+                    tips.append("• BMI outside healthy range – adjust diet & activity.")
+                if row["Heart_Rate"] > 90:
+                    tips.append("• High Heart Rate – reduce stress, exercise more.")
+                if row["Systolic_BP"] > 130:
+                    tips.append("• High BP – limit sodium, monitor regularly.")
+                if str(row["Smoking_Status"]).lower().startswith("current"):
+                    tips.append("• Smoking – consider cessation support.")
+
+                tips_html = "<br>".join(tips)
                 st.markdown(
-                    f"<div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background:#f9f9f9;'>"
-                    f"<b>🗓️ Visit on {row['Date']}</b><br>"
-                    f"<b>Height:</b> {row['Height_cm']} cm | <b>Weight:</b> {row['Weight_kg']} kg | <b>BMI:</b> {row['BMI']}<br>"
-                    f"<b>BP:</b> {row['Systolic_BP']}/{row['Diastolic_BP']} | <b>Heart Rate:</b> {row['Heart_Rate']} bpm<br>"
-                    f"<b>Health Score:</b> {row['Health_Score']} | "
-                    f"<b>Heart Risk:</b> <span style='color:white;background:{risk_color};padding:2px 6px;border-radius:5px;'>"
-                    f"{'High' if row['Heart_Disease']==1 else 'Low'}</span><br><br>"
-                    f"<b>🛡️ Tips:</b><br>"
-                    + ("• BMI outside healthy range.<br>" if row['BMI'] < 18.5 or row['BMI'] > 25 else "") +
-                      ("• High Heart Rate – reduce stress.<br>" if row['Heart_Rate'] > 90 else "") +
-                      ("• High BP – monitor regularly.<br>" if row['Systolic_BP'] > 130 else "") +
-                      ("• Smoking – consider quitting.<br>" if str(row['Smoking_Status']).lower().startswith("current") else "") +
-                    "</div>", unsafe_allow_html=True)
+                    f"""
+                    <div style='border:1px solid #ccc; border-radius:10px; padding:15px; margin-bottom:20px; background:#f9f9f9;'>
+                        <b>🗓️ Visit on {row['Date']}</b><br>
+                        <b>Height:</b> {row['Height_cm']} cm | <b>Weight:</b> {row['Weight_kg']} kg | <b>BMI:</b> {row['BMI']}<br>
+                        <b>BP:</b> {row['Systolic_BP']}/{row['Diastolic_BP']} | <b>Heart Rate:</b> {row['Heart_Rate']} bpm<br>
+                        <b>Health Score:</b> {row['Health_Score']} | 
+                        <b>Heart Risk:</b> <span style='color:white;background:{risk_color};padding:2px 6px;border-radius:5px;'>
+                        {"High" if row["Heart_Disease"]==1 else "Low"}</span><br><br>
+                        <b>🛡️ Preventive Tips:</b><br>
+                        {tips_html}
+                    </div>
+                    """, unsafe_allow_html=True
+                )
 
     st.markdown("---")
     if st.button("🔙 Back to Login"):
