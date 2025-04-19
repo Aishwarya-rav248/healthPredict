@@ -94,7 +94,7 @@ def show_dashboard(patient_id):
         with c4:
             st.markdown("### 🧠 Heart Risk")
             try:
-                model = joblib.load("heart_disease_model_with_importance.pkl")
+                model = joblib.load("heart_disease_model_with_importance (1).pkl")
                 input_df = pd.DataFrame([{
                     "BMI": latest["BMI"],
                     "Systolic_BP": latest["Systolic_BP"],
