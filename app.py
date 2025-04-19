@@ -36,10 +36,15 @@ def donut_chart(label, value, color, show_score=True):
     return fig
 
 def plot_feature_importance(model, feature_names):
-    importances = model.named_steps["classifier"].feature_importances_
+    try:
+        importances = model.named_steps["classifier"].feature_importances_
+    except:
+        importances = model.feature_importances_
+
     if len(importances) != len(feature_names):
         st.error("Feature mismatch in importance chart. Check model input features.")
         return
+
     fig, ax = plt.subplots(figsize=(6, 4))
     ax.barh(feature_names, importances, color="#4caf50")
     ax.set_title("Heart Risk - Feature Importance")
@@ -104,8 +109,6 @@ def show_dashboard(patient_id):
             st.markdown("### 🧠 Heart Risk")
             try:
                 model = joblib.load("heart_disease_model.pkl")
-                feature_names = ["Height_cm", "BMI", "Weight_kg", "Diastolic_BP","Heart_Rate", "Systolic_BP", "Diabetes", "Hyperlipidemia", "Smoking_Status"]
-
                 input_df = pd.DataFrame([{
                     "Height_cm": latest["Height_cm"],
                     "BMI": latest["BMI"],
@@ -123,9 +126,8 @@ def show_dashboard(patient_id):
                 st.plotly_chart(donut_chart(label, 50, color, show_score=False), use_container_width=True)
 
                 st.markdown("### 🔍 Risk Score Influencers")
-                feature_names = ["Height_cm", "BMI", "Weight_kg", "Diastolic_BP", "Heart_Rate",
-                                 "Systolic_BP", "Diabetes", "Hyperlipidemia", "Smoking_Status"]
-                plot_feature_importance(model, feature_names)
+                plot_feature_importance(model, input_df.columns.tolist())
+
             except Exception as e:
                 st.error(f"Model error: {e}")
 
