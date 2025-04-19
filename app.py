@@ -9,7 +9,7 @@ st.set_page_config(page_title="Health Dashboard", layout="wide")
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("Cleaned_Dataset.csv")
+    df = pd.read_csv("Cleaned Dataset.csv")
     df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
     return df
 
