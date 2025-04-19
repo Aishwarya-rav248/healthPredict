@@ -4,7 +4,9 @@ import plotly.graph_objects as go
 import joblib
 import os
 from datetime import date
+import matplotlib.pyplot as plt
 
+# ------------------- Setup -------------------
 st.set_page_config(page_title="Health Dashboard", layout="wide")
 
 @st.cache_data
@@ -15,6 +17,7 @@ def load_data():
 
 df = load_data()
 
+# ------------------- Helper Functions -------------------
 def donut_chart(label, value, color, show_score=True):
     text = f"<b>{value:.0f}</b><br>{label}" if show_score else f"<b>{label}</b>"
     fig = go.Figure(data=[go.Pie(
@@ -32,6 +35,15 @@ def donut_chart(label, value, color, show_score=True):
     )
     return fig
 
+def plot_feature_importance(model, feature_names):
+    importances = model.named_steps["classifier"].feature_importances_
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.barh(feature_names, importances, color="#4caf50")
+    ax.set_title("Heart Risk - Feature Importance")
+    ax.invert_yaxis()
+    st.pyplot(fig)
+
+# ------------------- Login -------------------
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.patient_id = ""
@@ -47,13 +59,14 @@ def show_login():
         else:
             st.error("Invalid Patient ID. Please try again.")
 
+# ------------------- Dashboard -------------------
 def show_dashboard(patient_id):
     patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
     latest = patient_df.iloc[-1]
 
     tab1, tab2 = st.tabs(["📊 Overview", "📅 Visit History"])
 
-    # Overview Tab
+    # ------------------- OVERVIEW TAB -------------------
     with tab1:
         with st.sidebar:
             st.markdown("## 📅 Book Appointment")
@@ -79,13 +92,13 @@ def show_dashboard(patient_id):
 
         c3, c4 = st.columns(2)
         with c3:
-            st.markdown("### Health Score")
+            st.markdown("### 🧬 Health Score")
             score = latest["Health_Score"]
             color = "#4caf50" if score >= 80 else "#ffa94d" if score >= 60 else "#ff4d4d"
             st.plotly_chart(donut_chart("Score", score, color), use_container_width=True)
 
         with c4:
-            st.markdown("### Heart Disease Risk")
+            st.markdown("### 🧠 Heart Risk")
             try:
                 model = joblib.load("heart_disease_model.pkl")
                 input_df = pd.DataFrame([{
@@ -103,10 +116,14 @@ def show_dashboard(patient_id):
                 label = "High Risk" if prediction == 1 else "Low Risk"
                 color = "#ff4d4d" if prediction == 1 else "#4caf50"
                 st.plotly_chart(donut_chart(label, 50, color, show_score=False), use_container_width=True)
+
+                # Feature importance chart
+                st.markdown("### 🔍 Risk Score Influencers")
+                plot_feature_importance(model, input_df.columns.tolist())
+
             except Exception as e:
                 st.error(f"Model error: {e}")
 
-        # Preventive Measures
         st.markdown("### 🛡️ Preventive Measures")
         with st.container():
             if latest["BMI"] < 18.5 or latest["BMI"] > 25:
@@ -118,13 +135,13 @@ def show_dashboard(patient_id):
             if str(latest["Smoking_Status"]).lower().startswith("current"):
                 st.write("• Smoking – Enroll in cessation program.")
 
-    # Visit History Tab
+    # ------------------- VISIT HISTORY TAB -------------------
     with tab2:
         st.markdown("## 📅 Visit History")
         st.info(f"Total Visits: {len(patient_df)} | Avg. Score: {round(patient_df['Health_Score'].mean(), 1)}")
 
         selected_metric = st.selectbox("Choose Metric to View Over Time", ["Health_Score", "BMI", "Systolic_BP", "Heart_Rate"])
-        st.line_chart(patient_df.set_index("Date")[selected_metric])
+        st.line_chart(patient_df.set_index(pd.to_datetime(patient_df["Date"]))[selected_metric])
 
         for _, row in patient_df.iterrows():
             risk = "High" if row["Heart_Disease"] == 1 else "Low"
@@ -138,15 +155,15 @@ def show_dashboard(patient_id):
                 tips.append("• High Blood Pressure")
             if str(row["Smoking_Status"]).lower().startswith("current"):
                 tips.append("• Smoking Cessation")
+            tip_text = "<br>".join(tips)
 
             st.markdown(
                 f"""<div style='border:1px solid #ccc;border-radius:10px;padding:10px;margin:10px 0;background:#f9f9f9;'>
-                <b>🗓 Visit Date:</b> {row['Date'].date()}<br>
+                <b>🗓 Visit Date:</b> {pd.to_datetime(row['Date']).date()}<br>
                 <b>Height:</b> {row['Height_cm']} cm | <b>Weight:</b> {row['Weight_kg']} kg | <b>BMI:</b> {row['BMI']}<br>
                 <b>BP:</b> {row['Systolic_BP']}/{row['Diastolic_BP']} | <b>Heart Rate:</b> {row['Heart_Rate']} bpm<br>
                 <b>Health Score:</b> {row['Health_Score']} | <b>Heart Risk:</b> <span style='background:{color};color:white;padding:2px 5px;border-radius:4px;'>{risk}</span><br>
-                <b>🛡️ Tips:</b><br>
-                {'<br>'.join(tips)}
+                <b>🛡️ Tips:</b><br>{tip_text}
                 </div>
                 """, unsafe_allow_html=True
             )
@@ -156,7 +173,7 @@ def show_dashboard(patient_id):
         st.session_state.patient_id = ""
         st.rerun()
 
-# ------------------ App ------------------
+# ------------------- Run App -------------------
 if st.session_state.logged_in:
     show_dashboard(st.session_state.patient_id)
 else:
