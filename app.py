@@ -115,6 +115,29 @@ def show_dashboard(patient_id):
             except Exception as e:
                 st.error(f"Model error: {e}")
 
+                # ⚠️ Consistency Check Section
+        st.markdown("### ⚠️ Consistency Check")
+        if prediction == 1 and score >= 90:
+            st.warning("High risk of heart disease detected despite a high health score.")
+            st.markdown("Possible contributing factors:")
+            if str(latest["Smoking_Status"]).lower().startswith("current"):
+                st.write("- 🚬 Smoking history")
+            if latest["Diabetes"] == 1:
+                st.write("- 🍬 Presence of diabetes")
+            if latest["Hyperlipidemia"] == 1:
+                st.write("- 🧬 High cholesterol (hyperlipidemia)")
+            if latest["Systolic_BP"] > 130:
+                st.write("- 📈 Elevated systolic blood pressure")
+        elif prediction == 0 and score <= 60:
+            st.info("You are at low risk of heart disease, but your overall health score is low.")
+            st.markdown("Areas for improvement:")
+            if latest["BMI"] < 18.5 or latest["BMI"] > 25:
+                st.write("- ⚖️ Adjust your BMI")
+            if latest["Heart_Rate"] > 90:
+                st.write("- 💓 Improve resting heart rate with activity")
+            if latest["Systolic_BP"] > 130:
+                st.write("- 📈 Lower blood pressure")
+
         st.markdown("### 🛡️ Preventive Measures")
         if latest["BMI"] < 18.5 or latest["BMI"] > 25:
             st.write(f"• BMI ({latest['BMI']}) – Adjust diet & exercise.")
