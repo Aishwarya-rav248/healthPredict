@@ -81,11 +81,12 @@ def show_dashboard(patient_id):
             st.metric("Blood Pressure", f"{latest['Systolic_BP']}/{latest['Diastolic_BP']}")
             st.metric("Heart Rate", f"{latest['Heart_Rate']} bpm")
 
+        # Score and Risk
         c3, c4 = st.columns(2)
+        score = latest["Health_Score"]
+        score_color = "#4caf50" if score >= 80 else "#ffa94d" if score >= 60 else "#ff4d4d"
         with c3:
             st.markdown("### 🧬 Health Score")
-            score = latest["Health_Score"]
-            score_color = "#4caf50" if score >= 80 else "#ffa94d" if score >= 60 else "#ff4d4d"
             st.plotly_chart(donut_chart("Score", score, score_color), use_container_width=True)
 
         with c4:
@@ -101,19 +102,28 @@ def show_dashboard(patient_id):
                     "Diabetes": latest["Diabetes"],
                     "Hyperlipidemia": latest["Hyperlipidemia"]
                 }])
-
                 le = LabelEncoder()
-                smoking_values = df["Smoking_Status"].unique().tolist()
-                le.fit(smoking_values)
+                le.fit(df["Smoking_Status"].unique())
                 input_df["Smoking_Status"] = le.transform(input_df["Smoking_Status"])
 
                 prediction = model.predict(input_df)[0]
                 label = "High Risk" if prediction == 1 else "Low Risk"
                 risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
                 st.plotly_chart(donut_chart(label, 50, risk_color, show_score=False), use_container_width=True)
+
+                # Consistency Check
+                st.markdown("### 🔎 Consistency Check")
+                if prediction == 1 and score >= 90:
+                    st.warning("⚠️ High Heart Disease Risk but Health Score is 90+.\n\nThis could mean the current metrics are good but historical data suggests risk.")
+                elif prediction == 0 and score < 60:
+                    st.warning("⚠️ Low Heart Risk but Health Score is poor.\n\nYou might not be at heart risk but still need to improve general health.")
+                else:
+                    st.success("✅ Health Score and Risk are consistent.")
+
             except Exception as e:
                 st.error(f"Model error: {e}")
 
+        # Preventive Measures
         st.markdown("### 🛡️ Preventive Measures")
         if latest["BMI"] < 18.5 or latest["BMI"] > 25:
             st.write(f"• BMI ({latest['BMI']}) – Adjust diet & exercise.")
@@ -124,18 +134,7 @@ def show_dashboard(patient_id):
         if str(latest["Smoking_Status"]).lower().startswith("current"):
             st.write("• Smoking – Enroll in cessation program.")
 
-       # ----------------- Consistency Check -----------------
-st.markdown("### ⚠️ Consistency Check")
-if score >= 80 and prediction == 1:
-    st.warning("⚠️ Mismatch Detected: High Health Score but High Heart Risk")
-    st.write("While your overall health metrics look great, your heart disease risk is high. This may be due to factors not reflected in the score like family history or cholesterol. Please consult a cardiologist for further assessment.")
-elif score <= 70 and prediction == 0:
-    st.warning("⚠️ Mismatch Detected: Low Health Score but Low Heart Risk")
-    st.write("Although your heart risk is low, your health score is below optimal. We recommend improving lifestyle habits such as regular exercise, stress management, and a balanced diet.")
-else:
-    st.success("✅ Health Score and Heart Risk are consistent.")
-    st.write("No inconsistencies detected between your health score and heart disease risk.")
-
+    # ------------------- VISIT HISTORY TAB -------------------
     with tab2:
         st.markdown("## 📅 Visit History")
         st.info(f"Total Visits: {len(patient_df)} | Avg. Score: {round(patient_df['Health_Score'].mean(), 1)}")
