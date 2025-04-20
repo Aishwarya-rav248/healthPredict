@@ -124,14 +124,17 @@ def show_dashboard(patient_id):
         if str(latest["Smoking_Status"]).lower().startswith("current"):
             st.write("• Smoking – Enroll in cessation program.")
 
-        # ----------------- Consistency Check -----------------
-        st.markdown("### ⚠️ Consistency Check")
-        if score >= 90 and prediction == 1:
-            st.warning("Health Score is very high but Risk is also high — possible inconsistency.")
-        elif score <= 50 and prediction == 0:
-            st.warning("Health Score is low but Risk is marked low — consider re-evaluation.")
-        else:
-            st.success("✅ Health Score and Risk prediction are consistent.")
+       # ----------------- Consistency Check -----------------
+st.markdown("### ⚠️ Consistency Check")
+if score >= 80 and prediction == 1:
+    st.warning("⚠️ Mismatch Detected: High Health Score but High Heart Risk")
+    st.write("While your overall health metrics look great, your heart disease risk is high. This may be due to factors not reflected in the score like family history or cholesterol. Please consult a cardiologist for further assessment.")
+elif score <= 70 and prediction == 0:
+    st.warning("⚠️ Mismatch Detected: Low Health Score but Low Heart Risk")
+    st.write("Although your heart risk is low, your health score is below optimal. We recommend improving lifestyle habits such as regular exercise, stress management, and a balanced diet.")
+else:
+    st.success("✅ Health Score and Heart Risk are consistent.")
+    st.write("No inconsistencies detected between your health score and heart disease risk.")
 
     with tab2:
         st.markdown("## 📅 Visit History")
