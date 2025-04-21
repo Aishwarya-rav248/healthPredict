@@ -77,7 +77,6 @@ def show_dashboard(patient_id):
 
         c1, c2 = st.columns(2)
         with c1:
-           st.markdown("## 👤 Patient Overview")
             
         # Top cards
         top1, top2, top3 = st.columns([1.2, 1.2, 1.2])
