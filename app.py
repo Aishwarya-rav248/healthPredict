@@ -88,13 +88,13 @@ def show_dashboard(patient_id):
         # Charts
         c1, c2 = st.columns(2)
         with c1:
-            st.markdown("### 🧬 Health Score")
+            st.markdown("### Health Score")
             score = latest["Health_Score"]
             color = "#4caf50" if score >= 80 else "#ffa94d" if score >= 60 else "#ff4d4d"
             st.plotly_chart(donut_chart("Score", score, color), use_container_width=True)
 
         with c2:
-            st.markdown("### 🧠 Heart Risk")
+            st.markdown("### Heart Risk")
             try:
                 model = joblib.load("heart_disease_model (1).pkl")
                 input_df = pd.DataFrame([{
@@ -116,7 +116,7 @@ def show_dashboard(patient_id):
             except Exception as e:
                 st.error(f"Model error: {e}")
 
-        st.markdown("### 🛡️ Preventive Measures")
+        st.markdown("### Preventive Measures")
         if latest["BMI"] < 18.5 or latest["BMI"] > 25:
             st.write(f"• BMI ({latest['BMI']}) – Adjust diet & exercise.")
         if latest["Heart_Rate"] > 90:
@@ -152,7 +152,7 @@ def show_dashboard(patient_id):
                 <b>Height:</b> {row['Height_cm']} cm | <b>Weight:</b> {row['Weight_kg']} kg | <b>BMI:</b> {row['BMI']}<br>
                 <b>BP:</b> {row['Systolic_BP']}/{row['Diastolic_BP']} | <b>Heart Rate:</b> {row['Heart_Rate']} bpm<br>
                 <b>Health Score:</b> {row['Health_Score']} | <b>Heart Risk:</b> <span style='background:{color};color:white;padding:2px 5px;border-radius:4px;'>{risk}</span><br>
-                <b>🛡️ Tips:</b><br>{tip_text}
+                <b> Tips:</b><br>{tip_text}
                 </div>
                 """, unsafe_allow_html=True
             )
