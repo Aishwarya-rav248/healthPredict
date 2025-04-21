@@ -113,16 +113,18 @@ def show_dashboard(patient_id):
                 risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
                 st.plotly_chart(donut_chart(label, 50, risk_color, show_score=False), use_container_width=True)
 
-                # 🔍 Insight & Recommendation
-                st.markdown("### Insight & Recommendation")
+                # 🔍 Insight & Recommendation section
+                st.markdown("### 🔍 Insight & Recommendation")
                 if score >= 80 and prediction == 0:
-                    st.success("✅ Everything looks good! Keep maintaining your healthy lifestyle.")
+                    st.success("✅ Your health score and risk level are aligned. Keep maintaining your healthy lifestyle!")
                 elif score < 60 and prediction == 1:
-                    st.error("🔴 You're at high risk and have a low health score. Please consult a Cardiologist immediately.")
+                    st.error("🔴 Your health score is low and you're at high heart disease risk. Please consult your doctor immediately.")
                 elif score >= 80 and prediction == 1:
-                    st.warning("⚠️ Despite a good health score, heart risk is high. Consider getting a full check-up.")
+                    st.warning("⚠️ High health score but elevated risk detected. Recommend full body check-up.")
                 elif score < 60 and prediction == 0:
-                    st.info("🟡 You're currently low risk, but your health score is low. Consider lifestyle improvements.")
+                    st.info("🟡 Low health score but low risk. Focus on improving daily habits for better outcomes.")
+                else:
+                    st.info("📊 Monitor your vitals regularly for consistency.")
             except Exception as e:
                 st.error(f"Model error: {e}")
 
