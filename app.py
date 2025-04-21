@@ -98,33 +98,39 @@ def show_dashboard(patient_id):
             st.plotly_chart(donut_chart("Score", score, color), use_container_width=True)
 
         with c4:
-            st.markdown("### Heart Risk")
-            try:
-                model = joblib.load("heart_disease_model (1).pkl")
-                input_df = pd.DataFrame([{
-                    "BMI": latest["BMI"],
-                    "Systolic_BP": latest["Systolic_BP"],
-                    "Diastolic_BP": latest["Diastolic_BP"],
-                    "Heart_Rate": latest["Heart_Rate"],
-                    "Smoking_Status": latest["Smoking_Status"],
-                    "Diabetes": latest["Diabetes"],
-                    "Hyperlipidemia": latest["Hyperlipidemia"]
-                }])
-                le = LabelEncoder()
-                le.fit(df["Smoking_Status"].unique())
-                input_df["Smoking_Status"] = le.transform(input_df["Smoking_Status"])
-                prediction = model.predict(input_df)[0]
-                label = "High Risk" if prediction == 1 else "Low Risk"
-                risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
-                st.plotly_chart(donut_chart(label, 50, risk_color, show_score=False), use_container_width=True)
+    st.markdown("### Heart Risk")
+    try:
+        model = joblib.load("heart_disease_model (1).pkl")
+        input_df = pd.DataFrame([{
+            "BMI": latest["BMI"],
+            "Systolic_BP": latest["Systolic_BP"],
+            "Diastolic_BP": latest["Diastolic_BP"],
+            "Heart_Rate": latest["Heart_Rate"],
+            "Smoking_Status": latest["Smoking_Status"],
+            "Diabetes": latest["Diabetes"],
+            "Hyperlipidemia": latest["Hyperlipidemia"]
+        }])
+        le = LabelEncoder()
+        le.fit(df["Smoking_Status"].unique())
+        input_df["Smoking_Status"] = le.transform(input_df["Smoking_Status"])
+        prediction = model.predict(input_df)[0]
+        label = "High Risk" if prediction == 1 else "Low Risk"
+        risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
+        st.plotly_chart(donut_chart(label, 50, risk_color, show_score=False), use_container_width=True)
 
-                st.markdown("### 🔍 Consistency Check")
-                if score >= 85 and prediction == 1:
-                    st.warning("⚠️ High Health Score but High Heart Risk – Get a detailed evaluation.")
-                elif score <= 60 and prediction == 0:
-                    st.info("ℹ️ Low Health Score but Low Risk – Focus on general fitness and lifestyle.")
-            except Exception as e:
-                st.error(f"Model error: {e}")
+        # Consistency Check (Updated)
+        st.markdown("### 🔍 Consistency Check")
+        if prediction == 1 and score >= 85:
+            st.warning("⚠️ Your Health Score looks good, but you're at **High Risk**. Consider a detailed checkup soon.")
+        elif prediction == 0 and score <= 60:
+            st.info("ℹ️ Your Heart Risk is low, but your overall Health Score is poor. Consider improving your lifestyle.")
+        elif prediction == 1 and score <= 60:
+            st.error("🚨 Both Health Score and Risk are in bad range. Please consult a doctor immediately.")
+        elif prediction == 0 and score >= 85:
+            st.success("✅ Great! Your Health Score and Risk levels are in sync. Keep maintaining your health!")
+    except Exception as e:
+        st.error(f"Model error: {e}")
+
 
         st.markdown("### Personalized Preventive Measures")
         recommendations = []
