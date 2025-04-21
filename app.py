@@ -6,7 +6,6 @@ import os
 from datetime import date
 from sklearn.preprocessing import LabelEncoder
 
-# ------------------- Setup -------------------
 st.set_page_config(page_title="Health Dashboard", layout="wide")
 
 @st.cache_data
@@ -63,7 +62,6 @@ def show_dashboard(patient_id):
 
     # ------------------- Overview Tab -------------------
     with tab1:
-        # Calendar sidebar
         with st.sidebar:
             st.markdown("## 📅 Book Appointment")
             doctor = st.selectbox("Choose Doctor", ["Cardiologist", "General Physician", "Endocrinologist"])
@@ -75,7 +73,7 @@ def show_dashboard(patient_id):
 
         st.markdown("## 👤 Patient Overview")
 
-        # Top cards
+        # Top Cards
         top1, top2, top3 = st.columns([1.2, 1.2, 1.2])
         with top1:
             st.markdown(f"**Patient ID**: {patient_id}")
@@ -120,45 +118,44 @@ def show_dashboard(patient_id):
                 risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
                 st.plotly_chart(donut_chart(label, 50, risk_color, show_score=False), use_container_width=True)
 
-                # Consistency Check
                 st.markdown("### 🔍 Consistency Check")
                 if score >= 85 and prediction == 1:
-                    st.warning("⚠️ High Health Score but also High Risk. Consider a detailed checkup.")
+                    st.warning("⚠️ High Health Score but High Heart Risk – Get a detailed evaluation.")
                 elif score <= 60 and prediction == 0:
-                    st.info("ℹ️ Low Health Score but Low Risk. Improve overall wellness.")
+                    st.info("ℹ️ Low Health Score but Low Risk – Focus on general fitness and lifestyle.")
             except Exception as e:
                 st.error(f"Model error: {e}")
 
-        st.markdown("### 🛡️ Personalized Preventive Measures")
-recommendations = []
+        st.markdown("### Personalized Preventive Measures")
+        recommendations = []
 
-if latest["BMI"] < 18.5:
-    recommendations.append(f"• Underweight (BMI: {latest['BMI']:.1f}) – Increase calorie intake with nutritious foods. Consult a dietitian.")
-elif latest["BMI"] > 25:
-    recommendations.append(f"• Overweight (BMI: {latest['BMI']:.1f}) – Incorporate regular exercise and a calorie-controlled diet.")
+        if latest["BMI"] < 18.5:
+            recommendations.append(f"• Underweight (BMI: {latest['BMI']:.1f}) – Increase nutritious calorie intake.")
+        elif latest["BMI"] > 25:
+            recommendations.append(f"• Overweight (BMI: {latest['BMI']:.1f}) – Adopt balanced diet & physical activity.")
 
-if latest["Heart_Rate"] > 100:
-    recommendations.append(f"• Elevated Heart Rate ({latest['Heart_Rate']} bpm) – Practice stress-reducing techniques like yoga or meditation.")
-elif latest["Heart_Rate"] < 60:
-    recommendations.append(f"• Low Heart Rate ({latest['Heart_Rate']} bpm) – Monitor for fatigue or dizziness. Seek evaluation if persistent.")
+        if latest["Heart_Rate"] > 100:
+            recommendations.append(f"• High Heart Rate ({latest['Heart_Rate']} bpm) – Practice stress reduction techniques.")
+        elif latest["Heart_Rate"] < 60:
+            recommendations.append(f"• Low Heart Rate ({latest['Heart_Rate']} bpm) – Monitor if symptoms occur.")
 
-if latest["Systolic_BP"] >= 130 or latest["Diastolic_BP"] >= 80:
-    recommendations.append(f"• High Blood Pressure ({latest['Systolic_BP']}/{latest['Diastolic_BP']}) – Reduce salt intake, exercise 30 mins/day, and monitor regularly.")
+        if latest["Systolic_BP"] >= 130 or latest["Diastolic_BP"] >= 80:
+            recommendations.append(f"• Elevated BP ({latest['Systolic_BP']}/{latest['Diastolic_BP']}) – Reduce salt, regular checkups.")
 
-if str(latest["Smoking_Status"]).lower().startswith("current"):
-    recommendations.append("• Current smoker – Quitting smoking drastically reduces cardiovascular risk. Consider joining a cessation program.")
+        if str(latest["Smoking_Status"]).lower().startswith("current"):
+            recommendations.append("• Smoking – Quit smoking for significant heart and lung health improvements.")
 
-if latest["Diabetes"]:
-    recommendations.append("• Diabetes – Maintain blood sugar through medication, diet, and regular HbA1c monitoring.")
+        if latest["Diabetes"]:
+            recommendations.append("• Diabetes – Manage sugar levels with diet, medication, and regular monitoring.")
 
-if latest["Hyperlipidemia"]:
-    recommendations.append("• High cholesterol – Choose low-fat foods, increase fiber, and follow up with lipid profile tests.")
+        if latest["Hyperlipidemia"]:
+            recommendations.append("• Hyperlipidemia – Avoid fatty foods, follow up on lipid profiles.")
 
-if not recommendations:
-    st.success("🎉 Great job! No major red flags. Continue maintaining a healthy lifestyle.")
-else:
-    for rec in recommendations:
-        st.write(rec)
+        if not recommendations:
+            st.success("🎉 Great job! No major red flags. Keep up the healthy lifestyle.")
+        else:
+            for rec in recommendations:
+                st.write(rec)
 
     # ------------------- Visit History -------------------
     with tab2:
