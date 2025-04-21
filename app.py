@@ -77,28 +77,34 @@ def show_dashboard(patient_id):
 
         c1, c2 = st.columns(2)
         with c1:
+           st.markdown("## 👤 Patient Overview")
+            
+        # Top cards
+        top1, top2, top3 = st.columns([1.2, 1.2, 1.2])
+        with top1:
             st.markdown(f"**Patient ID**: {patient_id}")
             st.markdown(f"**Visit Date**: {latest['Date'].date()}")
             st.markdown(f"**Height**: {latest['Height_cm']} cm")
             st.markdown(f"**Weight**: {latest['Weight_kg']} kg")
-            st.markdown(f"**Smoking**: {latest['Smoking_Status']}")
-            st.markdown(f"**Diabetes**: {'Yes' if latest['Diabetes'] == 1 else 'No'}")
-            st.markdown(f"**Hyperlipidemia**: {'Yes' if latest['Hyperlipidemia'] == 1 else 'No'}")
-            st.markdown(f"**Heart Disease**: {'Yes' if latest['Heart_Disease'] == 1 else 'No'}")
-        with c2:
+        with top2:
             st.metric("BMI", latest["BMI"])
-            st.metric("Blood Pressure", f"{latest['Systolic_BP']}/{latest['Diastolic_BP']}")
             st.metric("Heart Rate", f"{latest['Heart_Rate']} bpm")
+            st.metric("BP", f"{latest['Systolic_BP']}/{latest['Diastolic_BP']}")
+        with top3:
+            st.markdown(f"**Smoking:** {latest['Smoking_Status']}")
+            st.markdown(f"**Diabetes:** {'Yes' if latest['Diabetes'] else 'No'}")
+            st.markdown(f"**Hyperlipidemia:** {'Yes' if latest['Hyperlipidemia'] else 'No'}")
+            st.markdown(f"**Heart Disease:** {'Yes' if latest['Heart_Disease'] else 'No'}")
 
         c3, c4 = st.columns(2)
         with c3:
-            st.markdown("### 🧬 Health Score")
+            st.markdown("### Health Score")
             score = latest["Health_Score"]
             color = "#4caf50" if score >= 80 else "#ffa94d" if score >= 60 else "#ff4d4d"
             st.plotly_chart(donut_chart("Score", score, color), use_container_width=True)
 
         with c4:
-            st.markdown("### 🧠 Heart Risk")
+            st.markdown("### Heart Risk")
             try:
                 model = joblib.load("heart_disease_model (1).pkl")
                 input_df = pd.DataFrame([{
