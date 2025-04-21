@@ -17,13 +17,13 @@ def load_data():
 
 df = load_data()
 
+# ------------------- Helper -------------------
 def donut_chart(label, value, color, show_score=True):
     text = f"<b>{value:.0f}</b><br>{label}" if show_score else f"<b>{label}</b>"
     fig = go.Figure(data=[go.Pie(values=[value if show_score else 50, 100 - value if show_score else 50],
                                  hole=0.75, marker_colors=[color, "#f0f2f6"], textinfo='none')])
-    fig.update_layout(
-        showlegend=False, height=170, width=170, margin=dict(t=0, b=0, l=0, r=0),
-        annotations=[dict(text=text, font_size=14, showarrow=False)])
+    fig.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0), height=170, width=170,
+                      annotations=[dict(text=text, font_size=14, showarrow=False)])
     return fig
 
 def save_appointment(patient_id, doctor, appt_date, notes):
@@ -38,6 +38,7 @@ def save_appointment(patient_id, doctor, appt_date, notes):
     else:
         record.to_csv("appointments.csv", index=False)
 
+# ------------------- Login -------------------
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.patient_id = ""
@@ -53,13 +54,17 @@ def show_login():
         else:
             st.error("Invalid Patient ID. Please try again.")
 
+# ------------------- Dashboard -------------------
 def show_dashboard(patient_id):
     patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
     latest = patient_df.iloc[-1]
 
     tab1, tab2 = st.tabs(["📊 Overview", "📅 Visit History"])
 
+    # ------------------- Overview Tab -------------------
     with tab1:
+
+        # Sidebar calendar
         with st.sidebar:
             st.markdown("## 📅 Book Appointment")
             doctor = st.selectbox("Choose Doctor", ["Cardiologist", "General Physician", "Endocrinologist"])
@@ -91,8 +96,8 @@ def show_dashboard(patient_id):
         with c3:
             st.markdown("### Health Score")
             score = latest["Health_Score"]
-            score_color = "#4caf50" if score >= 80 else "#ffa94d" if score >= 60 else "#ff4d4d"
-            st.plotly_chart(donut_chart("Score", score, score_color), use_container_width=True)
+            color = "#4caf50" if score >= 80 else "#ffa94d" if score >= 60 else "#ff4d4d"
+            st.plotly_chart(donut_chart("Score", score, color), use_container_width=True)
 
         with c4:
             st.markdown("### Heart Risk")
@@ -111,31 +116,34 @@ def show_dashboard(patient_id):
                 le.fit(df["Smoking_Status"].unique())
                 input_df["Smoking_Status"] = le.transform(input_df["Smoking_Status"])
                 prediction = model.predict(input_df)[0]
-                risk_label = "High Risk" if prediction == 1 else "Low Risk"
+                label = "High Risk" if prediction == 1 else "Low Risk"
                 risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
-                st.plotly_chart(donut_chart(risk_label, 50, risk_color, show_score=False), use_container_width=True)
+                st.plotly_chart(donut_chart(label, 50, risk_color, show_score=False), use_container_width=True)
 
-                # Consistency Check (Enhanced)
+                # Consistency Check
                 st.markdown("### 🔍 Consistency Check")
                 if score >= 80 and prediction == 0:
-                      st.success("✅ Your health score and heart risk status are aligned. Keep maintaining your healthy lifestyle!")
+                    st.success("✅ Your health score and heart risk status are aligned. Keep maintaining your healthy lifestyle!")
                 elif score < 60 and prediction == 1:
-                      st.error("🔴 Your health score is low and you're at high heart disease risk. Immediate medical attention is advised.")
+                    st.error("🔴 Your health score is low and you're at high heart disease risk. Immediate medical attention is advised.")
                 elif score >= 80 and prediction == 1:
-                      st.warning("⚠️ Though your health score is high, your risk is high. Schedule a comprehensive check-up.")
+                    st.warning("⚠️ Though your health score is high, your risk is high. Schedule a comprehensive check-up.")
                 elif score < 60 and prediction == 0:
-                      st.info("🟡 Your health score is low, but your risk is low. Consider improving daily habits and lifestyle.")
+                    st.info("🟡 Your health score is low, but your risk is low. Consider improving daily habits and lifestyle.")
+            except Exception as e:
+                st.error(f"Model error: {e}")
 
         st.markdown("### 🛡️ Preventive Measures")
         if latest["BMI"] < 18.5 or latest["BMI"] > 25:
-            st.write(f"• BMI ({latest['BMI']}) – Adjust diet and maintain regular exercise.")
+            st.write(f"• BMI ({latest['BMI']}) – Adjust your diet and stay active.")
         if latest["Heart_Rate"] > 90:
-            st.write("• Elevated heart rate – consider stress reduction and cardio fitness.")
+            st.write("• High Heart Rate – Try deep breathing, reduce caffeine, and stay hydrated.")
         if latest["Systolic_BP"] > 130:
-            st.write("• Blood pressure is high – reduce salt and monitor regularly.")
+            st.write("• High Blood Pressure – Cut down on salt, avoid stress, and follow up with your doctor.")
         if str(latest["Smoking_Status"]).lower().startswith("current"):
-            st.write("• Quit smoking – significant improvement in heart health possible.")
+            st.write("• Smoking – Join a cessation program or speak to a counselor.")
 
+    # ------------------- Visit History -------------------
     with tab2:
         st.markdown("## 📅 Visit History")
         st.info(f"Total Visits: {len(patient_df)} | Avg. Score: {round(patient_df['Health_Score'].mean(), 1)}")
@@ -154,15 +162,14 @@ def show_dashboard(patient_id):
                 tips.append("• High Blood Pressure")
             if str(row["Smoking_Status"]).lower().startswith("current"):
                 tips.append("• Smoking Cessation")
-            tip_text = "<br>".join(tips)
 
+            tip_text = "<br>".join(tips)
             st.markdown(
                 f"""<div style='border:1px solid #ccc;border-radius:10px;padding:10px;margin:10px 0;background:#f9f9f9;'>
                 <b>🗓 Visit Date:</b> {row['Date'].date()}<br>
                 <b>Height:</b> {row['Height_cm']} cm | <b>Weight:</b> {row['Weight_kg']} kg | <b>BMI:</b> {row['BMI']}<br>
                 <b>BP:</b> {row['Systolic_BP']}/{row['Diastolic_BP']} | <b>Heart Rate:</b> {row['Heart_Rate']} bpm<br>
-                <b>Health Score:</b> {row['Health_Score']} | 
-                <b>Heart Risk:</b> <span style='background:{color};color:white;padding:2px 5px;border-radius:4px;'>{risk}</span><br>
+                <b>Health Score:</b> {row['Health_Score']} | <b>Heart Risk:</b> <span style='background:{color};color:white;padding:2px 5px;border-radius:4px;'>{risk}</span><br>
                 <b>🛡️ Tips:</b><br>{tip_text}
                 </div>
                 """, unsafe_allow_html=True
