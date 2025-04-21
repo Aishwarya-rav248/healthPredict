@@ -6,7 +6,6 @@ import os
 from datetime import date
 from sklearn.preprocessing import LabelEncoder
 
-# ------------------- Setup -------------------
 st.set_page_config(page_title="Health Dashboard", layout="wide")
 
 @st.cache_data
@@ -17,7 +16,6 @@ def load_data():
 
 df = load_data()
 
-# ------------------- Helper -------------------
 def donut_chart(label, value, color, show_score=True):
     text = f"<b>{value:.0f}</b><br>{label}" if show_score else f"<b>{label}</b>"
     fig = go.Figure(data=[go.Pie(values=[value if show_score else 50, 100 - value if show_score else 50],
@@ -38,7 +36,6 @@ def save_appointment(patient_id, doctor, appt_date, notes):
     else:
         record.to_csv("appointments.csv", index=False)
 
-# ------------------- Login -------------------
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.patient_id = ""
@@ -54,17 +51,13 @@ def show_login():
         else:
             st.error("Invalid Patient ID. Please try again.")
 
-# ------------------- Dashboard -------------------
 def show_dashboard(patient_id):
     patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
     latest = patient_df.iloc[-1]
 
     tab1, tab2 = st.tabs(["📊 Overview", "📅 Visit History"])
 
-    # ------------------- Overview Tab -------------------
     with tab1:
-
-        # Sidebar calendar
         with st.sidebar:
             st.markdown("## 📅 Book Appointment")
             doctor = st.selectbox("Choose Doctor", ["Cardiologist", "General Physician", "Endocrinologist"])
@@ -75,7 +68,6 @@ def show_dashboard(patient_id):
                 st.success(f"✅ Appointment booked with {doctor} on {appt_date.strftime('%b %d, %Y')}")
 
         st.markdown("## 👤 Patient Overview")
-
         top1, top2, top3 = st.columns([1.2, 1.2, 1.2])
         with top1:
             st.markdown(f"**Patient ID**: {patient_id}")
@@ -120,8 +112,8 @@ def show_dashboard(patient_id):
                 risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
                 st.plotly_chart(donut_chart(label, 50, risk_color, show_score=False), use_container_width=True)
 
-                # Consistency Check
-                st.markdown("### 🔍 Consistency Check")
+                # Insight & Recommendation
+                st.markdown("### 💡 Insight & Recommendation")
                 if score >= 80 and prediction == 0:
                     st.success("✅ Your health score and heart risk status are aligned. Keep maintaining your healthy lifestyle!")
                 elif score < 60 and prediction == 1:
@@ -130,18 +122,19 @@ def show_dashboard(patient_id):
                     st.warning("⚠️ Though your health score is high, your risk is high. Schedule a comprehensive check-up.")
                 elif score < 60 and prediction == 0:
                     st.info("🟡 Your health score is low, but your risk is low. Consider improving daily habits and lifestyle.")
+
             except Exception as e:
                 st.error(f"Model error: {e}")
 
         st.markdown("### 🛡️ Preventive Measures")
         if latest["BMI"] < 18.5 or latest["BMI"] > 25:
-            st.write(f"• BMI ({latest['BMI']}) – Adjust your diet and stay active.")
+            st.write(f"• BMI ({latest['BMI']}) – Adjust diet & exercise.")
         if latest["Heart_Rate"] > 90:
-            st.write("• High Heart Rate – Try deep breathing, reduce caffeine, and stay hydrated.")
+            st.write("• High Heart Rate – Manage stress, increase activity.")
         if latest["Systolic_BP"] > 130:
-            st.write("• High Blood Pressure – Cut down on salt, avoid stress, and follow up with your doctor.")
+            st.write("• High Blood Pressure – Limit salt, monitor regularly.")
         if str(latest["Smoking_Status"]).lower().startswith("current"):
-            st.write("• Smoking – Join a cessation program or speak to a counselor.")
+            st.write("• Smoking – Enroll in cessation program.")
 
     # ------------------- Visit History -------------------
     with tab2:
