@@ -63,8 +63,7 @@ def show_dashboard(patient_id):
 
     # ------------------- Overview Tab -------------------
     with tab1:
-        st.markdown("## 👤 Patient Overview")
-
+    
         # Calendar sidebar
         with st.sidebar:
             st.markdown("## 📅 Book Appointment")
@@ -78,6 +77,8 @@ def show_dashboard(patient_id):
         c1, c2 = st.columns(2)
         with c1:
             
+        st.markdown("## 👤 Patient Overview")
+
         # Top cards
         top1, top2, top3 = st.columns([1.2, 1.2, 1.2])
         with top1:
@@ -94,7 +95,6 @@ def show_dashboard(patient_id):
             st.markdown(f"**Diabetes:** {'Yes' if latest['Diabetes'] else 'No'}")
             st.markdown(f"**Hyperlipidemia:** {'Yes' if latest['Hyperlipidemia'] else 'No'}")
             st.markdown(f"**Heart Disease:** {'Yes' if latest['Heart_Disease'] else 'No'}")
-
         c3, c4 = st.columns(2)
         with c3:
             st.markdown("### Health Score")
