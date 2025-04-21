@@ -115,17 +115,16 @@ def show_dashboard(patient_id):
                 risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
                 st.plotly_chart(donut_chart(risk_label, 50, risk_color, show_score=False), use_container_width=True)
 
+                # Consistency Check (Enhanced)
                 st.markdown("### 🔍 Consistency Check")
-                if score >= 85 and prediction == 1:
-                    st.warning("⚠️ Your health score looks great, but your risk level is high. Please consult a doctor.")
-                elif score < 60 and prediction == 0:
-                    st.info("ℹ️ You have a low health score but no significant heart risk detected. Improve lifestyle habits.")
+                if score >= 80 and prediction == 0:
+                      st.success("✅ Your health score and heart risk status are aligned. Keep maintaining your healthy lifestyle!")
                 elif score < 60 and prediction == 1:
-                    st.error("❗️ Your health score is low and heart risk is high. Immediate medical attention is advised.")
-                else:
-                    st.success("✅ Your health score and risk levels are consistent and in good shape.")
-            except Exception as e:
-                st.error(f"Model error: {e}")
+                      st.error("🔴 Your health score is low and you're at high heart disease risk. Immediate medical attention is advised.")
+                elif score >= 80 and prediction == 1:
+                      st.warning("⚠️ Though your health score is high, your risk is high. Schedule a comprehensive check-up.")
+                elif score < 60 and prediction == 0:
+                      st.info("🟡 Your health score is low, but your risk is low. Consider improving daily habits and lifestyle.")
 
         st.markdown("### 🛡️ Preventive Measures")
         if latest["BMI"] < 18.5 or latest["BMI"] > 25:
