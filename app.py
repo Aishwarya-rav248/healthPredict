@@ -129,15 +129,36 @@ def show_dashboard(patient_id):
             except Exception as e:
                 st.error(f"Model error: {e}")
 
-        st.markdown("### 🛡️ Preventive Measures")
-        if latest["BMI"] < 18.5 or latest["BMI"] > 25:
-            st.write(f"• BMI ({latest['BMI']}) – Adjust diet & exercise.")
-        if latest["Heart_Rate"] > 90:
-            st.write("• High Heart Rate – Manage stress, increase activity.")
-        if latest["Systolic_BP"] > 130:
-            st.write("• High Blood Pressure – Limit salt, monitor regularly.")
-        if str(latest["Smoking_Status"]).lower().startswith("current"):
-            st.write("• Smoking – Enroll in cessation program.")
+        st.markdown("### 🛡️ Personalized Preventive Measures")
+recommendations = []
+
+if latest["BMI"] < 18.5:
+    recommendations.append(f"• Underweight (BMI: {latest['BMI']:.1f}) – Increase calorie intake with nutritious foods. Consult a dietitian.")
+elif latest["BMI"] > 25:
+    recommendations.append(f"• Overweight (BMI: {latest['BMI']:.1f}) – Incorporate regular exercise and a calorie-controlled diet.")
+
+if latest["Heart_Rate"] > 100:
+    recommendations.append(f"• Elevated Heart Rate ({latest['Heart_Rate']} bpm) – Practice stress-reducing techniques like yoga or meditation.")
+elif latest["Heart_Rate"] < 60:
+    recommendations.append(f"• Low Heart Rate ({latest['Heart_Rate']} bpm) – Monitor for fatigue or dizziness. Seek evaluation if persistent.")
+
+if latest["Systolic_BP"] >= 130 or latest["Diastolic_BP"] >= 80:
+    recommendations.append(f"• High Blood Pressure ({latest['Systolic_BP']}/{latest['Diastolic_BP']}) – Reduce salt intake, exercise 30 mins/day, and monitor regularly.")
+
+if str(latest["Smoking_Status"]).lower().startswith("current"):
+    recommendations.append("• Current smoker – Quitting smoking drastically reduces cardiovascular risk. Consider joining a cessation program.")
+
+if latest["Diabetes"]:
+    recommendations.append("• Diabetes – Maintain blood sugar through medication, diet, and regular HbA1c monitoring.")
+
+if latest["Hyperlipidemia"]:
+    recommendations.append("• High cholesterol – Choose low-fat foods, increase fiber, and follow up with lipid profile tests.")
+
+if not recommendations:
+    st.success("🎉 Great job! No major red flags. Continue maintaining a healthy lifestyle.")
+else:
+    for rec in recommendations:
+        st.write(rec)
 
     # ------------------- Visit History -------------------
     with tab2:
