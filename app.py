@@ -92,7 +92,7 @@ def show_dashboard(patient_id):
             color = "#4caf50" if score >= 80 else "#ffa94d" if score >= 60 else "#ff4d4d"
             st.plotly_chart(donut_chart("Score", score, color), use_container_width=True)
 
-        with c4:
+                with c4:
             st.markdown("### Heart Risk")
             try:
                 model = joblib.load("heart_disease_model (1).pkl")
@@ -108,13 +108,29 @@ def show_dashboard(patient_id):
                 le = LabelEncoder()
                 le.fit(df["Smoking_Status"].unique())
                 input_df["Smoking_Status"] = le.transform(input_df["Smoking_Status"])
+                prediction_proba = model.predict_proba(input_df)[0][1] * 100
                 prediction = model.predict(input_df)[0]
-                label = "High Risk" if prediction == 1 else "Low Risk"
-                risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
-                st.plotly_chart(donut_chart(label, 50, risk_color, show_score=False), use_container_width=True)
+
+                # Risk label
+                label = "High Risk 🔴" if prediction == 1 else "Low Risk ✅"
+                label_color = "red" if prediction == 1 else "green"
+
+                # Risk bar chart
+                import matplotlib.pyplot as plt
+                fig, ax = plt.subplots(figsize=(5, 1.2))
+                ax.barh(0, 40, color='green')
+                ax.barh(0, 30, left=40, color='orange')
+                ax.barh(0, 30, left=70, color='red')
+                ax.plot([prediction_proba, prediction_proba], [-0.4, 0.4], color='black', linewidth=2)
+                ax.text(prediction_proba, 0.5, f"{round(prediction_proba)}%", ha='center', va='bottom', fontsize=9)
+                ax.text(50, -0.8, f"Heart Disease Risk: {round(prediction_proba)}% — {label}",
+                        ha='center', va='center', fontsize=10, weight='bold', color=label_color)
+                ax.axis('off')
+                st.pyplot(fig)
 
                 # 🔍 Insight & Recommendation section
                 st.markdown("### 🔍 Insight & Recommendation")
+                score = latest["Health_Score"]
                 if score >= 80 and prediction == 0:
                     st.success("✅ Your health score and risk level are aligned. Keep maintaining your healthy lifestyle!")
                 elif score < 60 and prediction == 1:
@@ -127,6 +143,7 @@ def show_dashboard(patient_id):
                     st.info("📊 Monitor your vitals regularly for consistency.")
             except Exception as e:
                 st.error(f"Model error: {e}")
+
 
         st.markdown("### Preventive Measures")
         if latest["BMI"] < 18.5 or latest["BMI"] > 25:
