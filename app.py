@@ -1,3 +1,4 @@
+# [Unchanged Imports & Setup]
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -6,7 +7,6 @@ import os
 from datetime import date
 from sklearn.preprocessing import LabelEncoder
 
-# ------------------- Setup -------------------
 st.set_page_config(page_title="Health Dashboard", layout="wide")
 
 @st.cache_data
@@ -58,6 +58,7 @@ def show_dashboard(patient_id):
 
     tab1, tab2 = st.tabs(["📊 Overview", "📅 Visit History"])
 
+    # ------------------- OVERVIEW -------------------
     with tab1:
         with st.sidebar:
             st.markdown("## 📅 Book Appointment")
@@ -113,36 +114,33 @@ def show_dashboard(patient_id):
                 risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
                 st.plotly_chart(donut_chart(label, 50, risk_color, show_score=False), use_container_width=True)
 
-                # 🔍 Insight & Recommendation section
                 st.markdown("### Insight & Recommendation")
                 if score >= 80 and prediction == 0:
-                    st.success("✅ Your health score and risk level are aligned. Keep maintaining your healthy lifestyle!")
+                    st.success("✅ Your health score and risk level are aligned. Keep up the healthy lifestyle!")
                 elif score < 60 and prediction == 1:
-                    st.error("🔴 Your health score is low and you're at high heart disease risk. Please consult your doctor immediately.")
+                    st.error("🚨 Low health score and high risk detected. Please consult a doctor immediately.")
                 elif score >= 80 and prediction == 1:
-                    st.warning("⚠️ High health score but elevated risk detected. Recommend full body check-up.")
+                    st.warning("⚠️ High health score but risk is elevated. Schedule a full check-up.")
                 elif score < 60 and prediction == 0:
-                    st.info("🟡 Low health score but low risk. Focus on improving daily habits for better outcomes.")
-                else:
-                    st.info("📊 Monitor your vitals regularly for consistency.")
+                    st.info("🟡 Low health score but no risk detected. Focus on wellness improvements.")
             except Exception as e:
                 st.error(f"Model error: {e}")
 
-        st.markdown("### Preventive Measures")
+        st.markdown("### 🛡️ Preventive Measures")
         if latest["BMI"] < 18.5 or latest["BMI"] > 25:
-            st.write(f"• Your BMI is {latest['BMI']} – Consider a diet and exercise plan.")
+            st.write(f"• BMI is {latest['BMI']} – Adopt a balanced diet and regular exercise.")
         if latest["Heart_Rate"] > 90:
-            st.write("• Elevated Heart Rate – Practice stress reduction and stay physically active.")
+            st.write("• High heart rate – Manage stress, get enough sleep, and increase cardio fitness.")
         if latest["Systolic_BP"] > 130 or latest["Diastolic_BP"] > 85:
-            st.write("• Blood Pressure is high – Reduce salt, avoid processed food, and consult your doctor.")
+            st.write("• Elevated blood pressure – Reduce salt, avoid alcohol, and consult a physician.")
         if str(latest["Smoking_Status"]).lower().startswith("current"):
-            st.write("• Smoking – Strongly recommended to join a cessation program.")
+            st.write("• Smoking – Immediate cessation advised. Join a smoking cessation program.")
         if latest["Hyperlipidemia"]:
-            st.write("• High cholesterol detected – Consider a lipid-lowering diet and regular exercise.")
+            st.write("• Cholesterol is high – Adopt a low-fat diet and consider statin therapy.")
         if latest["Diabetes"]:
-            st.write("• Diabetic condition – Monitor sugar levels and follow your physician’s plan.")
+            st.write("• Diabetes – Monitor blood glucose regularly and follow medical guidance.")
 
-    # ------------------- Visit History -------------------
+    # ------------------- VISIT HISTORY -------------------
     with tab2:
         st.markdown("## 📅 Visit History")
         st.info(f"Total Visits: {len(patient_df)} | Avg. Score: {round(patient_df['Health_Score'].mean(), 1)}")
@@ -154,17 +152,17 @@ def show_dashboard(patient_id):
             color = "#ff4d4d" if row["Heart_Disease"] == 1 else "#4caf50"
             tips = []
             if row["BMI"] < 18.5 or row["BMI"] > 25:
-                tips.append("• Maintain a healthy BMI through balanced nutrition and regular activity.")
+                tips.append("• Maintain a healthy BMI with exercise and a nutritious diet.")
             if row["Heart_Rate"] > 90:
-                tips.append("• Reduce elevated heart rate with daily walking and stress control.")
+                tips.append("• High heart rate – Reduce caffeine, improve sleep quality.")
             if row["Systolic_BP"] > 130 or row["Diastolic_BP"] > 85:
-                tips.append("• Control BP via low-sodium diet, exercise, and regular monitoring.")
+                tips.append("• Control your blood pressure through lifestyle changes.")
             if str(row["Smoking_Status"]).lower().startswith("current"):
-                tips.append("• Quit smoking for better cardiovascular outcomes.")
+                tips.append("• Quit smoking to lower heart disease risk.")
             if row["Hyperlipidemia"]:
-                tips.append("• Monitor cholesterol. Consider a fiber-rich diet.")
+                tips.append("• High cholesterol – Eat fiber, limit saturated fats.")
             if row["Diabetes"]:
-                tips.append("• Manage blood sugar levels with diet and medication.")
+                tips.append("• Diabetes – Regularly check sugar levels and follow your doctor’s diet plan.")
 
             tip_text = "<br>".join(tips)
             st.markdown(
@@ -183,7 +181,7 @@ def show_dashboard(patient_id):
         st.session_state.patient_id = ""
         st.rerun()
 
-# ------------------- Run -------------------
+# ------------------- Run App -------------------
 if st.session_state.logged_in:
     show_dashboard(st.session_state.patient_id)
 else:
