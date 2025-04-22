@@ -114,7 +114,7 @@ def show_dashboard(patient_id):
                 st.plotly_chart(donut_chart(label, 50, risk_color, show_score=False), use_container_width=True)
 
                 # 🔍 Insight & Recommendation section
-                st.markdown("### 🔍 Insight & Recommendation")
+                st.markdown("### Insight & Recommendation")
                 if score >= 80 and prediction == 0:
                     st.success("✅ Your health score and risk level are aligned. Keep maintaining your healthy lifestyle!")
                 elif score < 60 and prediction == 1:
