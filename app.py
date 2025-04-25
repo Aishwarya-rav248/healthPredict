@@ -101,7 +101,10 @@ def show_dashboard(patient_id):
             st.markdown("### Heart Risk Prediction")
             try:
                 model = joblib.load("Heart_Disease_Risk_Model_XGBoost.pkl")
+
                 input_df = pd.DataFrame([{
+                    "Height_cm": latest["Height_cm"],
+                    "Weight_kg": latest["Weight_kg"],
                     "BMI": latest["BMI"],
                     "Systolic_BP": latest["Systolic_BP"],
                     "Diastolic_BP": latest["Diastolic_BP"],
@@ -111,7 +114,7 @@ def show_dashboard(patient_id):
                     "Hyperlipidemia": latest["Hyperlipidemia"],
                     "AGE": latest["AGE"],
                     "GENDER": latest["GENDER"]
-                }])
+               }])
 
                 le = LabelEncoder()
                 le.fit(df["Smoking_Status"].unique())
