@@ -4,7 +4,6 @@ import plotly.graph_objects as go
 import joblib
 import os
 from datetime import date
-from sklearn.preprocessing import LabelEncoder
 import streamlit.components.v1 as components
 
 # ------------------- Setup -------------------
@@ -38,6 +37,7 @@ def save_appointment(patient_id, doctor, appt_date, notes):
     else:
         record.to_csv("appointments.csv", index=False)
 
+# ------------------- Login -------------------
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.patient_id = ""
@@ -53,6 +53,7 @@ def show_login():
         else:
             st.error("Invalid Patient ID. Please try again.")
 
+# ------------------- Dashboard -------------------
 def show_dashboard(patient_id):
     patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
     latest = patient_df.iloc[-1]
@@ -71,17 +72,19 @@ def show_dashboard(patient_id):
                 st.success(f"✅ Appointment booked with {doctor} on {appt_date.strftime('%b %d, %Y')}")
 
         st.markdown("## 👤 Patient Overview")
-
         top1, top2, top3 = st.columns([1.2, 1.2, 1.2])
+
         with top1:
-            st.markdown(f"**Patient ID**: {patient_id}")
-            st.markdown(f"**Visit Date**: {latest['Date'].date()}")
-            st.markdown(f"**Height**: {latest['Height_cm']} cm")
-            st.markdown(f"**Weight**: {latest['Weight_kg']} kg")
+            st.markdown(f"**Patient ID:** {patient_id}")
+            st.markdown(f"**Visit Date:** {latest['Date'].date()}")
+            st.markdown(f"**Height:** {latest['Height_cm']} cm")
+            st.markdown(f"**Weight:** {latest['Weight_kg']} kg")
+        
         with top2:
             st.metric("BMI", latest["BMI"])
             st.metric("Heart Rate", f"{latest['Heart_Rate']} bpm")
-            st.metric("BP", f"{latest['Systolic_BP']}/{latest['Diastolic_BP']}")
+            st.metric("Blood Pressure", f"{latest['Systolic_BP']}/{latest['Diastolic_BP']}")
+
         with top3:
             st.markdown(f"**Age:** {latest['AGE']}")
             st.markdown(f"**Gender:** {latest['GENDER']}")
@@ -91,6 +94,7 @@ def show_dashboard(patient_id):
             st.markdown(f"**Heart Disease:** {'Yes' if latest['Heart_Disease'] else 'No'}")
 
         c3, c4 = st.columns(2)
+
         with c3:
             st.markdown("### Health Score")
             health_score = latest["Health Score"]
@@ -114,17 +118,7 @@ def show_dashboard(patient_id):
                     "Hyperlipidemia": latest["Hyperlipidemia"],
                     "AGE": latest["AGE"],
                     "GENDER": latest["GENDER"]
-               }])
-
-                # Label Encoding Smoking_Status
-                le_smoke = LabelEncoder()
-                le_smoke.fit(df["Smoking_Status"].unique())
-                input_df["Smoking_Status"] = le_smoke.transform(input_df["Smoking_Status"])
-
-                # Label Encoding Gender
-                le_gender = LabelEncoder()
-                le_gender.fit(df["GENDER"].unique())
-                input_df["GENDER"] = le_gender.transform(input_df["GENDER"])
+                }])
 
                 prediction_proba = model.predict_proba(input_df)[0][1] * 100
                 prediction = model.predict(input_df)[0]
@@ -133,14 +127,16 @@ def show_dashboard(patient_id):
                 risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
                 st.plotly_chart(donut_chart(label, prediction_proba, risk_color), use_container_width=True)
 
+                # SHAP Visual
                 st.markdown("### 🔎 Factors Influencing Risk Prediction")
                 try:
                     with open("SHAP.html", "r", encoding="utf-8") as f:
                         shap_html = f.read()
                     components.html(shap_html, height=600, scrolling=True)
-                except Exception as e:
+                except Exception:
                     st.warning("⚠️ SHAP visualization could not be loaded.")
 
+                # Insight & Recommendation
                 st.markdown("### Insight & Recommendation")
                 if health_score >= 80 and prediction == 0:
                     st.success("✅ Health score and risk are aligned. Keep maintaining your good health!")
@@ -189,7 +185,7 @@ def show_dashboard(patient_id):
             if row["Hyperlipidemia"]:
                 tips.append("• Control cholesterol with diet and exercise.")
             if row["Diabetes"]:
-                tips.append("• Monitor diabetes closely with physician guidance.")
+                tips.append("• Manage diabetes with regular medical supervision.")
 
             tip_text = "<br>".join(tips)
             st.markdown(
@@ -208,7 +204,7 @@ def show_dashboard(patient_id):
         st.session_state.patient_id = ""
         st.rerun()
 
-# ------------------- Run App -------------------
+# ------------------- Run -------------------
 if st.session_state.logged_in:
     show_dashboard(st.session_state.patient_id)
 else:
