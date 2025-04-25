@@ -123,6 +123,18 @@ def show_dashboard(patient_id):
                 risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
                 st.plotly_chart(donut_chart(label, prediction_proba, risk_color), use_container_width=True)
 
+                st.markdown("### 🔎 Factors Influencing Risk Prediction")
+                st.info("Below is the model explanation showing how different factors influenced your heart disease risk prediction:")
+
+                # Display uploaded SHAP HTML file inside Streamlit
+                try:
+                     with open("SHAP.html", "r", encoding="utf-8") as f:
+                          shap_html = f.read()
+                     components.html(shap_html, height=600, scrolling=True)
+                except Exception as e:
+                st.warning("SHAP visualization not available yet.")
+
+                
                 st.markdown("### Insight & Recommendation")
                 if health_score >= 80 and prediction == 0:
                     st.success("✅ Health score and risk are aligned. Keep maintaining your good health!")
