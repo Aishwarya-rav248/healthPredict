@@ -98,52 +98,51 @@ def show_dashboard(patient_id):
             st.plotly_chart(donut_chart("Score", health_score, color), use_container_width=True)
 
         with c4:
-    st.markdown("### Heart Risk Prediction")
-    try:
-        model = joblib.load("Heart_Disease_Risk_Model_XGBoost.pkl")
-        input_df = pd.DataFrame([{
-            "BMI": latest["BMI"],
-            "Systolic_BP": latest["Systolic_BP"],
-            "Diastolic_BP": latest["Diastolic_BP"],
-            "Heart_Rate": latest["Heart_Rate"],
-            "Smoking_Status": latest["Smoking_Status"],
-            "Diabetes": latest["Diabetes"],
-            "Hyperlipidemia": latest["Hyperlipidemia"],
-            "AGE": latest["AGE"],
-            "GENDER": latest["GENDER"]
-        }])
+            st.markdown("### Heart Risk Prediction")
+            try:
+                model = joblib.load("Heart_Disease_Risk_Model_XGBoost.pkl")
+                input_df = pd.DataFrame([{
+                    "BMI": latest["BMI"],
+                    "Systolic_BP": latest["Systolic_BP"],
+                    "Diastolic_BP": latest["Diastolic_BP"],
+                    "Heart_Rate": latest["Heart_Rate"],
+                    "Smoking_Status": latest["Smoking_Status"],
+                    "Diabetes": latest["Diabetes"],
+                    "Hyperlipidemia": latest["Hyperlipidemia"],
+                    "AGE": latest["AGE"],
+                    "GENDER": latest["GENDER"]
+                }])
 
-        le = LabelEncoder()
-        le.fit(df["Smoking_Status"].unique())
-        input_df["Smoking_Status"] = le.transform(input_df["Smoking_Status"])
-        
-        prediction_proba = model.predict_proba(input_df)[0][1] * 100
-        prediction = model.predict(input_df)[0]
+                le = LabelEncoder()
+                le.fit(df["Smoking_Status"].unique())
+                input_df["Smoking_Status"] = le.transform(input_df["Smoking_Status"])
 
-        label = "High Risk" if prediction == 1 else "Low Risk"
-        risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
-        st.plotly_chart(donut_chart(label, prediction_proba, risk_color), use_container_width=True)
+                prediction_proba = model.predict_proba(input_df)[0][1] * 100
+                prediction = model.predict(input_df)[0]
 
-        # SHAP visualization
-        st.markdown("### 🔎 Factors Influencing Risk Prediction")
-        try:
-            with open("SHAP.html", "r", encoding="utf-8") as f:
-                shap_html = f.read()
-            components.html(shap_html, height=600, scrolling=True)
-        except Exception as e:
-            st.warning("SHAP visualization not available yet.")
+                label = "High Risk" if prediction == 1 else "Low Risk"
+                risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
+                st.plotly_chart(donut_chart(label, prediction_proba, risk_color), use_container_width=True)
 
-        st.markdown("### Insight & Recommendation")
-        if health_score >= 80 and prediction == 0:
-            st.success("✅ Health score and risk are aligned. Keep maintaining your good health!")
-        elif health_score < 60 and prediction == 1:
-            st.error("🚨 Low health score and high risk detected. Immediate consultation recommended.")
-        elif health_score >= 80 and prediction == 1:
-            st.warning("⚠️ Good health score but risk detected. Full checkup advised.")
-        elif health_score < 60 and prediction == 0:
-            st.info("🟡 Low health score but low risk detected. Focus on lifestyle improvements.")
-    except Exception as e:
-        st.error(f"Model Error: {e}")
+                st.markdown("### 🔎 Factors Influencing Risk Prediction")
+                try:
+                    with open("SHAP.html", "r", encoding="utf-8") as f:
+                        shap_html = f.read()
+                    components.html(shap_html, height=600, scrolling=True)
+                except Exception as e:
+                    st.warning("⚠️ SHAP visualization could not be loaded.")
+
+                st.markdown("### Insight & Recommendation")
+                if health_score >= 80 and prediction == 0:
+                    st.success("✅ Health score and risk are aligned. Keep maintaining your good health!")
+                elif health_score < 60 and prediction == 1:
+                    st.error("🚨 Low health score and high risk detected. Immediate consultation recommended.")
+                elif health_score >= 80 and prediction == 1:
+                    st.warning("⚠️ Good health score but elevated risk detected. Recommend full checkup.")
+                elif health_score < 60 and prediction == 0:
+                    st.info("🟡 Low health score but low risk detected. Focus on healthy lifestyle improvements.")
+            except Exception as e:
+                st.error(f"Model Error: {e}")
 
         st.markdown("### 🛡️ Preventive Measures")
         if latest["BMI"] < 18.5 or latest["BMI"] > 25:
