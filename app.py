@@ -18,7 +18,15 @@ def load_data():
 
 df = load_data()
 
-# Function to Save Appointment
+# ------------------- Helper -------------------
+def donut_chart(label, value, color, show_score=True):
+    text = f"<b>{value:.0f}</b><br>{label}" if show_score else f"<b>{label}</b>"
+    fig = go.Figure(data=[go.Pie(values=[value if show_score else 50, 100 - value if show_score else 50],
+                                 hole=0.75, marker_colors=[color, "#f0f2f6"], textinfo='none')])
+    fig.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0), height=170, width=170,
+                      annotations=[dict(text=text, font_size=14, showarrow=False)])
+    return fig
+
 def save_appointment(patient_id, doctor, appt_date, notes):
     record = pd.DataFrame([{
         "Patient_ID": patient_id,
@@ -26,13 +34,17 @@ def save_appointment(patient_id, doctor, appt_date, notes):
         "Date": appt_date,
         "Notes": notes
     }])
-# ------------------- Login -------------------
+    if os.path.exists("appointments.csv"):
+        record.to_csv("appointments.csv", mode='a', header=False, index=False)
+    else:
+        record.to_csv("appointments.csv", index=False)
+
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.patient_id = ""
 
 def show_login():
-    st.title("Welcome to HealthPredict")
+    st.title("Welcome to HealthPredict 🩺")
     patient_id = st.text_input("Enter Patient ID")
     if st.button("Login"):
         if patient_id in df["patient"].astype(str).values:
@@ -43,21 +55,13 @@ def show_login():
             st.error("Invalid Patient ID. Please try again.")
 
 # ------------------- Dashboard -------------------
-def donut_chart(label, value, color, show_score=True):
-    text = f"<b>{value:.0f}</b><br>{label}" if show_score else f"<b>{label}</b>"
-    fig = go.Figure(data=[go.Pie(values=[value if show_score else 50, 100 - value if show_score else 50],
-                                 hole=0.75, marker_colors=[color, "#f0f2f6"], textinfo='none')])
-    fig.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0), height=170, width=170,
-                      annotations=[dict(text=text, font_size=14, showarrow=False)])
-    return fig
-
 def show_dashboard(patient_id):
     patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
     latest = patient_df.iloc[-1]
 
     tab1, tab2 = st.tabs(["📊 Overview", "📅 Visit History"])
 
-    # ------------------- Overview -------------------
+    # ------------------- OVERVIEW -------------------
     with tab1:
         with st.sidebar:
             st.markdown("## 📅 Book Appointment")
@@ -69,7 +73,6 @@ def show_dashboard(patient_id):
                 st.success(f"✅ Appointment booked with {doctor} on {appt_date.strftime('%b %d, %Y')}")
 
         st.markdown("## 👤 Patient Overview")
-
         top1, top2, top3 = st.columns([1.2, 1.2, 1.2])
         with top1:
             st.markdown(f"**Patient ID**: {patient_id}")
@@ -122,8 +125,6 @@ def show_dashboard(patient_id):
                 st.plotly_chart(donut_chart(label, prediction_proba, risk_color), use_container_width=True)
 
                 st.markdown("### 🔎 Factors Influencing Risk Prediction")
-                st.info("Model explanation for heart disease risk:")
-
                 try:
                     with open("SHAP.html", "r", encoding="utf-8") as f:
                         shap_html = f.read()
@@ -133,31 +134,31 @@ def show_dashboard(patient_id):
 
                 st.markdown("### Insight & Recommendation")
                 if health_score >= 80 and prediction == 0:
-                    st.success("✅ Health score and risk are aligned. Keep up the great work!")
+                    st.success("✅ Health score and risk are aligned. Keep maintaining your good health!")
                 elif health_score < 60 and prediction == 1:
-                    st.error("🚨 Low health score and high risk detected. Immediate medical consultation recommended.")
+                    st.error("🚨 Low health score and high risk detected. Immediate consultation recommended.")
                 elif health_score >= 80 and prediction == 1:
-                    st.warning("⚠️ Good health score but heart risk present. Schedule a full body checkup.")
+                    st.warning("⚠️ Good health score but risk detected. Full checkup advised.")
                 elif health_score < 60 and prediction == 0:
-                    st.info("🟡 Low health score but low risk. Focus on improving lifestyle.")
+                    st.info("🟡 Low health score but low risk detected. Focus on lifestyle improvements.")
             except Exception as e:
                 st.error(f"Model Error: {e}")
 
         st.markdown("### 🛡️ Preventive Measures")
         if latest["BMI"] < 18.5 or latest["BMI"] > 25:
-            st.write(f"• Your BMI is {latest['BMI']} – Consider diet and exercise changes.")
+            st.write(f"• Your BMI is {latest['BMI']} – Adopt a healthy lifestyle and exercise.")
         if latest["Heart_Rate"] > 90:
-            st.write("• High Heart Rate – Reduce stress, maintain physical fitness.")
+            st.write("• High heart rate – Focus on stress management and cardio training.")
         if latest["Systolic_BP"] > 130 or latest["Diastolic_BP"] > 85:
-            st.write("• Elevated Blood Pressure – Limit salt and maintain heart health.")
+            st.write("• Blood pressure is elevated – Reduce salt intake, monitor regularly.")
         if str(latest["Smoking_Status"]).lower().startswith("current"):
-            st.write("• Smoking – Consider joining a smoking cessation program.")
+            st.write("• Smoking – Immediate cessation recommended to lower heart risk.")
         if latest["Hyperlipidemia"]:
-            st.write("• High cholesterol detected – Dietary and lifestyle changes advised.")
+            st.write("• High cholesterol – Follow a fiber-rich, heart-healthy diet.")
         if latest["Diabetes"]:
-            st.write("• Diabetes – Regular sugar monitoring and proper medical advice needed.")
+            st.write("• Diabetes – Follow medical advice to manage sugar levels.")
 
-    # ------------------- Visit History -------------------
+    # ------------------- VISIT HISTORY -------------------
     with tab2:
         st.markdown("## 📅 Visit History")
         st.info(f"Total Visits: {len(patient_df)} | Avg. Health Score: {round(patient_df['Health Score'].mean(), 1)}")
@@ -169,17 +170,17 @@ def show_dashboard(patient_id):
             color = "#ff4d4d" if row["Heart_Disease"] == 1 else "#4caf50"
             tips = []
             if row["BMI"] < 18.5 or row["BMI"] > 25:
-                tips.append("• Maintain healthy BMI through diet and activity.")
+                tips.append("• Maintain healthy BMI through diet and exercise.")
             if row["Heart_Rate"] > 90:
-                tips.append("• Control high heart rate with stress reduction.")
+                tips.append("• Manage heart rate with stress reduction activities.")
             if row["Systolic_BP"] > 130 or row["Diastolic_BP"] > 85:
-                tips.append("• Manage blood pressure via diet, exercise.")
+                tips.append("• Manage blood pressure via diet and regular monitoring.")
             if str(row["Smoking_Status"]).lower().startswith("current"):
-                tips.append("• Quit smoking to protect your heart health.")
+                tips.append("• Quit smoking to improve heart health.")
             if row["Hyperlipidemia"]:
-                tips.append("• Improve cholesterol with fiber-rich diet.")
+                tips.append("• Control cholesterol with fiber-rich food.")
             if row["Diabetes"]:
-                tips.append("• Manage diabetes with diet, exercise, medication.")
+                tips.append("• Maintain sugar levels via diet and medication.")
 
             tip_text = "<br>".join(tips)
             st.markdown(
