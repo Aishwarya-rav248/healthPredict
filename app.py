@@ -116,9 +116,15 @@ def show_dashboard(patient_id):
                     "GENDER": latest["GENDER"]
                }])
 
-                le = LabelEncoder()
-                le.fit(df["Smoking_Status"].unique())
-                input_df["Smoking_Status"] = le.transform(input_df["Smoking_Status"])
+                # Label Encoding Smoking_Status
+                le_smoke = LabelEncoder()
+                le_smoke.fit(df["Smoking_Status"].unique())
+                input_df["Smoking_Status"] = le_smoke.transform(input_df["Smoking_Status"])
+
+                # Label Encoding Gender
+                le_gender = LabelEncoder()
+                le_gender.fit(df["GENDER"].unique())
+                input_df["GENDER"] = le_gender.transform(input_df["GENDER"])
 
                 prediction_proba = model.predict_proba(input_df)[0][1] * 100
                 prediction = model.predict(input_df)[0]
