@@ -21,6 +21,34 @@ def load_data():
 
 df = load_data()
 
+def preprocess_input(latest, df):
+    input_dict = {
+        "Height_cm": latest["Height_cm"],
+        "Weight_kg": latest["Weight_kg"],
+        "BMI": latest["BMI"],
+        "Systolic_BP": latest["Systolic_BP"],
+        "Diastolic_BP": latest["Diastolic_BP"],
+        "Heart_Rate": latest["Heart_Rate"],
+        "Smoking_Status": latest["Smoking_Status"],
+        "Diabetes": latest["Diabetes"],
+        "Hyperlipidemia": latest["Hyperlipidemia"],
+        "AGE": latest["AGE"],
+        "GENDER": latest["GENDER"]
+    }
+    input_df = pd.DataFrame([input_dict])
+
+    # Encode Smoking_Status
+    le_smoking = LabelEncoder()
+    le_smoking.fit(df["Smoking_Status"].unique())
+    input_df["Smoking_Status"] = le_smoking.transform(input_df["Smoking_Status"])
+
+    # Encode Gender
+    le_gender = LabelEncoder()
+    le_gender.fit(df["GENDER"].unique())
+    input_df["GENDER"] = le_gender.transform(input_df["GENDER"])
+
+    return input_df
+
 def donut_chart(label, value, color, show_score=True):
     text = f"<b>{value:.0f}</b><br>{label}" if show_score else f"<b>{label}</b>"
     fig = go.Figure(data=[go.Pie(values=[value if show_score else 50, 100 - value if show_score else 50],
@@ -104,28 +132,7 @@ def show_dashboard(patient_id):
             try:
                 model = joblib.load("Heart_Disease_Risk_Model_XGBoost.pkl")
 
-                input_df = pd.DataFrame([{
-                    "Height_cm": latest["Height_cm"],
-                    "Weight_kg": latest["Weight_kg"],
-                    "BMI": latest["BMI"],
-                    "Systolic_BP": latest["Systolic_BP"],
-                    "Diastolic_BP": latest["Diastolic_BP"],
-                    "Heart_Rate": latest["Heart_Rate"],
-                    "Smoking_Status": latest["Smoking_Status"],
-                    "Diabetes": latest["Diabetes"],
-                    "Hyperlipidemia": latest["Hyperlipidemia"],
-                    "AGE": latest["AGE"],
-                    "GENDER": latest["GENDER"]
-                }])
-
-                # Encoding Smoking_Status and GENDER
-                le_smoking = LabelEncoder()
-                le_smoking.fit(df["Smoking_Status"].unique())
-                input_df["Smoking_Status"] = le_smoking.transform(input_df["Smoking_Status"])
-
-                le_gender = LabelEncoder()
-                le_gender.fit(df["GENDER"].unique())
-                input_df["GENDER"] = le_gender.transform(input_df["GENDER"])
+                input_df = preprocess_input(latest, df)
 
                 prediction_proba = model.predict_proba(input_df)[0][1] * 100
                 prediction = model.predict(input_df)[0]
@@ -138,39 +145,38 @@ def show_dashboard(patient_id):
                 st.markdown("### 🔍 Personalized Risk Factors (Pie Chart)")
                 explainer = shap.TreeExplainer(model)
                 shap_values = explainer.shap_values(input_df)
-                feature_importance = pd.Series(shap_values[0], index=input_df.columns)
+                feature_importance = pd.Series(shap_values, index=input_df.columns)
                 feature_importance = feature_importance.abs().sort_values(ascending=False)
 
                 fig = go.Figure(data=[go.Pie(labels=feature_importance.index, values=feature_importance.values, hole=0.4)])
                 fig.update_layout(title="Factors Contributing to Your Risk", margin=dict(t=20, b=20, l=20, r=20))
                 st.plotly_chart(fig, use_container_width=True)
 
-                # Insights
                 st.markdown("### 💡 Insight & Recommendation")
                 if health_score >= 80 and prediction == 0:
                     st.success("✅ Your health and risk levels are aligned. Great job maintaining your health!")
                 elif health_score < 60 and prediction == 1:
                     st.error("🚨 Low health score and high risk detected. Consult a doctor immediately!")
                 elif health_score >= 80 and prediction == 1:
-                    st.warning("⚠️ High health score but still some risk detected. Recommend full body check-up.")
+                    st.warning("⚠️ High health score but some risk detected. Full check-up advised.")
                 elif health_score < 60 and prediction == 0:
-                    st.info("🟡 Low health score but low risk detected. Focus on improving habits.")
+                    st.info("🟡 Low health score but low risk detected. Focus on better habits.")
             except Exception as e:
                 st.error(f"Model Error: {e}")
 
         st.markdown("### 🛡️ Preventive Measures")
         if latest["BMI"] < 18.5 or latest["BMI"] > 25:
-            st.write(f"• Your BMI is {latest['BMI']} – Work on a balanced diet and regular exercise.")
+            st.write(f"• Your BMI is {latest['BMI']} – Work on balanced diet and exercise.")
         if latest["Heart_Rate"] > 90:
-            st.write("• High heart rate – Practice stress management and aerobic activity.")
+            st.write("• High heart rate – Manage stress and stay active.")
         if latest["Systolic_BP"] > 130 or latest["Diastolic_BP"] > 85:
-            st.write("• Blood pressure elevated – Reduce sodium intake and monitor BP regularly.")
+            st.write("• High blood pressure – Cut salt, regular exercise advised.")
         if str(latest["Smoking_Status"]).lower().startswith("current"):
-            st.write("• Smoking – Strongly advised to quit.")
+            st.write("• Smoking detected – Strongly advised to quit.")
         if latest["Hyperlipidemia"]:
-            st.write("• Hyperlipidemia detected – Adopt low-fat diet and regular exercise.")
+            st.write("• High cholesterol – Eat low-fat, high-fiber diet.")
         if latest["Diabetes"]:
-            st.write("• Diabetes detected – Monitor sugar levels and follow medical advice.")
+            st.write("• Diabetes detected – Regular blood sugar monitoring needed.")
 
     # ---------------- Visit History ----------------
     with tab2:
@@ -179,41 +185,12 @@ def show_dashboard(patient_id):
         selected_metric = st.selectbox("Metric to View Trend", ["Health Score", "BMI", "Systolic_BP", "Heart_Rate"])
         st.line_chart(patient_df.set_index("Date")[selected_metric])
 
-        for _, row in patient_df.iterrows():
-            risk = "High" if row["Heart_Disease"] == 1 else "Low"
-            color = "#ff4d4d" if row["Heart_Disease"] == 1 else "#4caf50"
-            tips = []
-            if row["BMI"] < 18.5 or row["BMI"] > 25:
-                tips.append("• Maintain BMI through balanced diet and exercise.")
-            if row["Heart_Rate"] > 90:
-                tips.append("• Improve aerobic fitness.")
-            if row["Systolic_BP"] > 130 or row["Diastolic_BP"] > 85:
-                tips.append("• Control BP via low-sodium diet, activity.")
-            if str(row["Smoking_Status"]).lower().startswith("current"):
-                tips.append("• Quit smoking for cardiovascular health.")
-            if row["Hyperlipidemia"]:
-                tips.append("• Manage cholesterol with healthy diet.")
-            if row["Diabetes"]:
-                tips.append("• Monitor diabetes with lifestyle and medication.")
-
-            tip_text = "<br>".join(tips)
-            st.markdown(
-                f"""<div style='border:1px solid #ccc;border-radius:10px;padding:10px;margin:10px 0;background:#f9f9f9;'>
-                <b>🗓 Visit Date:</b> {row['Date'].date()}<br>
-                <b>Height:</b> {row['Height_cm']} cm | <b>Weight:</b> {row['Weight_kg']} kg | <b>BMI:</b> {row['BMI']}<br>
-                <b>BP:</b> {row['Systolic_BP']}/{row['Diastolic_BP']} | <b>Heart Rate:</b> {row['Heart_Rate']} bpm<br>
-                <b>Health Score:</b> {row['Health Score']} | <b>Heart Risk:</b> <span style='background:{color};color:white;padding:2px 5px;border-radius:4px;'>{risk}</span><br>
-                <b>🛡️ Tips:</b><br>{tip_text}
-                </div>
-                """, unsafe_allow_html=True
-            )
-
     if st.button("🔙 Logout"):
         st.session_state.logged_in = False
         st.session_state.patient_id = ""
         st.rerun()
 
-# ------------------- Run App -------------------
+# ------------------- Run -------------------
 if st.session_state.logged_in:
     show_dashboard(st.session_state.patient_id)
 else:
