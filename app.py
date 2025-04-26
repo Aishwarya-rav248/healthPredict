@@ -128,13 +128,30 @@ def show_dashboard(patient_id):
                 st.plotly_chart(donut_chart(label, prediction_proba, risk_color), use_container_width=True)
 
                 # SHAP Visual
-                st.markdown("### 🔎 Factors Influencing Risk Prediction")
+                # SHAP Visual (LIVE PER PATIENT)
+                st.markdown("### 🔎 Factors Influencing Risk Prediction (Personalized)")
+
                 try:
-                    with open("SHAP.html", "r", encoding="utf-8") as f:
-                        shap_html = f.read()
-                    components.html(shap_html, height=600, scrolling=True)
-                except Exception:
-                    st.warning("⚠️ SHAP visualization could not be loaded.")
+                   import shap
+                   import xgboost
+
+                   # Create explainer based on model
+                   explainer = shap.TreeExplainer(model)
+
+                  # Calculate SHAP values for this patient
+                  shap_values = explainer.shap_values(input_df)
+
+                  # Take absolute shap values and top features
+                  feature_importance = pd.Series(np.abs(shap_values[0]), index=input_df.columns)
+                  feature_importance = feature_importance.sort_values(ascending=False)
+
+                  # Plot pie chart
+                 fig = go.Figure(data=[go.Pie(labels=feature_importance.index, values=feature_importance.values, hole=0.4)])
+                 fig.update_layout(title="Factors Contributing to Your Risk", margin=dict(t=20, b=20, l=20, r=20))
+                 st.plotly_chart(fig, use_container_width=True)
+
+                 except Exception as e:
+                     st.warning(f"⚠️ SHAP pie chart could not be generated: {e}")
 
                 # Insight & Recommendation
                 st.markdown("### Insight & Recommendation")
