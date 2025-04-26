@@ -133,7 +133,7 @@ def show_dashboard(patient_id):
                 st.markdown("### 🔎 Factors Influencing Risk Prediction (Personalized)")
 
                 try:
-                    explainer = shap.TreeExplainer(model)
+                    explainer = shap.TreeExplainer(model.named_steps["classifier"])
                     shap_values = explainer.shap_values(input_df)
 
                     feature_importance = pd.Series(np.abs(shap_values[0]), index=input_df.columns)
