@@ -129,29 +129,29 @@ def show_dashboard(patient_id):
 
                 # SHAP Visual
                 # SHAP Visual (LIVE PER PATIENT)
-                st.markdown("### 🔎 Factors Influencing Risk Prediction (Personalized)")
+st.markdown("### 🔎 Factors Influencing Risk Prediction (Personalized)")
+try:
+    import shap
+    import xgboost
+    import numpy as np
 
-                try:
-                   import shap
-                   import xgboost
+    # Create explainer
+    explainer = shap.TreeExplainer(model)
 
-                   # Create explainer based on model
-                   explainer = shap.TreeExplainer(model)
+    # Calculate SHAP values for this patient's input
+    shap_values = explainer.shap_values(input_df)
 
-                  # Calculate SHAP values for this patient
-                  shap_values = explainer.shap_values(input_df)
+    # Take absolute shap values and top features
+    feature_importance = pd.Series(np.abs(shap_values), index=input_df.columns)
+    feature_importance = feature_importance.sort_values(ascending=False)
 
-                  # Take absolute shap values and top features
-                  feature_importance = pd.Series(np.abs(shap_values[0]), index=input_df.columns)
-                  feature_importance = feature_importance.sort_values(ascending=False)
+    # Plot pie chart
+    fig = go.Figure(data=[go.Pie(labels=feature_importance.index, values=feature_importance.values, hole=0.4)])
+    fig.update_layout(title="Factors Contributing to Your Risk", margin=dict(t=20, b=20, l=20, r=20))
+    st.plotly_chart(fig, use_container_width=True)
 
-                  # Plot pie chart
-                 fig = go.Figure(data=[go.Pie(labels=feature_importance.index, values=feature_importance.values, hole=0.4)])
-                 fig.update_layout(title="Factors Contributing to Your Risk", margin=dict(t=20, b=20, l=20, r=20))
-                 st.plotly_chart(fig, use_container_width=True)
-
-                 except Exception as e:
-                     st.warning(f"⚠️ SHAP pie chart could not be generated: {e}")
+except Exception as e:
+    st.warning(f"⚠️ SHAP pie chart could not be generated: {e}")
 
                 # Insight & Recommendation
                 st.markdown("### Insight & Recommendation")
