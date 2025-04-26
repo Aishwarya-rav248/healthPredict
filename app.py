@@ -128,9 +128,11 @@ def show_dashboard(patient_id):
                 st.plotly_chart(donut_chart(label, prediction_proba, risk_color), use_container_width=True)
 
                 # SHAP Visual
-                # SHAP Visual (LIVE PER PATIENT)
-st.markdown("### 🔎 Factors Influencing Risk Prediction (Personalized)")
+               # Inside your "Heart Risk Prediction" block
+
+# SHAP Visual (LIVE PER PATIENT)
 try:
+    st.markdown("### 🔎 Factors Influencing Risk Prediction (Personalized)")
     import shap
     import xgboost
     import numpy as np
@@ -152,6 +154,7 @@ try:
 
 except Exception as e:
     st.warning(f"⚠️ SHAP pie chart could not be generated: {e}")
+
 
                 # Insight & Recommendation
                 st.markdown("### Insight & Recommendation")
