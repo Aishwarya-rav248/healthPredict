@@ -6,7 +6,6 @@ import shap
 import numpy as np
 import os
 from datetime import date
-import streamlit.components.v1 as components
 
 # ------------------- Setup -------------------
 st.set_page_config(page_title="Health Dashboard", layout="wide")
@@ -142,7 +141,13 @@ def show_dashboard(patient_id):
                 explainer = shap.TreeExplainer(model)
                 shap_values = explainer.shap_values(input_df_encoded)
 
-                feature_importance = pd.Series(np.abs(shap_values), index=input_df_encoded.columns)
+                # XGBoost returns a list for binary → use shap_values[1]
+                if isinstance(shap_values, list):
+                    shap_vals = shap_values[1]
+                else:
+                    shap_vals = shap_values
+
+                feature_importance = pd.Series(np.abs(shap_vals[0]), index=input_df_encoded.columns)
                 feature_importance = feature_importance.sort_values(ascending=False)
 
                 fig = go.Figure(data=[go.Pie(labels=feature_importance.index, values=feature_importance.values, hole=0.4)])
