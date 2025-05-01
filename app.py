@@ -132,7 +132,8 @@ def show_dashboard(patient_id):
                     explainer = shap.TreeExplainer(xgb_model)
                     shap_values = explainer.shap_values(input_transformed)
 
-                    original_columns = input_df.columns.tolist()
+                    original_columns = model.feature_names_in_
+                    input_df = input_df[original_columns]  # reorder to match training
                     feature_names = preprocessor.get_feature_names_out(original_columns)
                     base_names = [name.split("__")[0] for name in feature_names]
 
