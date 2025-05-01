@@ -140,7 +140,7 @@ def show_dashboard(patient_id):
                         "Male": 0, "Female": 1
                     })
 
-                    explainer = shap.Explainer(model)
+                    explainer = shap.Explainer(model.named_steps["classifier"])
                     shap_values = explainer(input_df_encoded)
 
                     feature_importance = pd.Series(
