@@ -122,10 +122,14 @@ def show_dashboard(patient_id):
                     input_transformed = preprocessor.transform(input_df)
                     explainer = shap.TreeExplainer(xgb_model)
                     shap_values = explainer.shap_values(input_transformed)
+            
                     try:
-                        feature_names = preprocessor.get_feature_names_out(input_df.columns)
+                    feature_names = preprocessor.get_feature_names_out(original_columns)
+                    # Clean names like 'column__value' ➝ 'column'
+                    feature_names = [col.split('__')[0] for col in feature_names]
                     except:
-                        feature_names = [f"feature_{i}" for i in range(input_transformed.shape[1])]
+                    feature_names = original_columns
+
                     shap_abs_mean = np.abs(shap_values).mean(axis=0)
                     feature_importance = pd.Series(shap_abs_mean, index=feature_names).sort_values(ascending=False)
                     fig = go.Figure(data=[
