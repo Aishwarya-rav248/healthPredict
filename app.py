@@ -106,15 +106,11 @@ def show_dashboard(patient_id):
             st.markdown("### Heart Risk Prediction")
             try:
                 model = joblib.load("Heart_Disease_Risk_Model_XGBoost.pkl")
-
                 input_df = pd.DataFrame([{k: latest[k] for k in [
                     "Height_cm", "Weight_kg", "BMI", "Systolic_BP", "Diastolic_BP",
-                    "Heart_Rate", "Smoking_Status", "Diabetes", "Hyperlipidemia", "AGE", "GENDER"
-                ]}])
-
+                    "Heart_Rate", "Smoking_Status", "Diabetes", "Hyperlipidemia", "AGE", "GENDER"]}])
                 prediction_proba = model.predict_proba(input_df)[0][1] * 100
                 prediction = model.predict(input_df)[0]
-
                 label = "High Risk" if prediction == 1 else "Low Risk"
                 risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
                 st.plotly_chart(donut_chart(label, prediction_proba, risk_color), use_container_width=True)
@@ -153,6 +149,40 @@ def show_dashboard(patient_id):
                     st.info("Low health score but low risk. Focus on improving habits.")
             except Exception as e:
                 st.error(f"Model Error: {e}")
+
+    with tab2:
+        st.markdown("## Visit History")
+        st.info(f"Total Visits: {len(patient_df)} | Avg. Health Score: {round(patient_df['Health Score'].mean(), 1)}")
+        selected_metric = st.selectbox("Metric to View Trend", ["Health Score", "BMI", "Systolic_BP", "Heart_Rate"])
+        st.line_chart(patient_df.set_index("Date")[selected_metric])
+
+        for _, row in patient_df.iterrows():
+            risk = "High" if row["Heart_Disease"] == 1 else "Low"
+            color = "#ff4d4d" if row["Heart_Disease"] == 1 else "#4caf50"
+            tips = []
+            if row["BMI"] < 18.5 or row["BMI"] > 25:
+                tips.append("• Maintain healthy BMI through diet and activity.")
+            if row["Heart_Rate"] > 90:
+                tips.append("• High heart rate – Work on aerobic fitness.")
+            if row["Systolic_BP"] > 130 or row["Diastolic_BP"] > 85:
+                tips.append("• Manage blood pressure through lifestyle changes.")
+            if str(row["Smoking_Status"]).lower().startswith("current"):
+                tips.append("• Quit smoking for heart health.")
+            if row["Hyperlipidemia"]:
+                tips.append("• Control cholesterol with diet and exercise.")
+            if row["Diabetes"]:
+                tips.append("• Manage diabetes with regular medical supervision.")
+            tip_text = "<br>".join(tips)
+            st.markdown(
+                f"""<div style='border:1px solid #ccc;border-radius:10px;padding:10px;margin:10px 0;background:#f9f9f9;'>
+                <b>Visit Date:</b> {row['Date'].date()}<br>
+                <b>Height:</b> {row['Height_cm']} cm | <b>Weight:</b> {row['Weight_kg']} kg | <b>BMI:</b> {row['BMI']}<br>
+                <b>BP:</b> {row['Systolic_BP']}/{row['Diastolic_BP']} | <b>Heart Rate:</b> {row['Heart_Rate']} bpm<br>
+                <b>Health Score:</b> {row['Health_Score']} | <b>Heart Risk:</b> <span style='background:{color};color:white;padding:2px 5px;border-radius:4px;'>{risk}</span><br>
+                <b>Tips:</b><br>{tip_text}
+                </div>
+                """, unsafe_allow_html=True
+            )
 
     if st.button("Logout"):
         st.session_state.logged_in = False
