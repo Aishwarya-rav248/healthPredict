@@ -129,19 +129,43 @@ def show_dashboard(patient_id):
                 risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
                 st.plotly_chart(donut_chart(label, prediction_proba, risk_color), use_container_width=True)
 
-                # SHAP Visual (Patient specific)
-                st.markdown("### 🔎 Factors Influencing Risk Prediction (Personalized)")
+                # SHAP Visual (LIVE per patient)
+st.markdown("### 🔎 Factors Influencing Risk Prediction (Personalized)")
 
-                try:
-                    explainer = shap.TreeExplainer(model.named_steps["classifier"])
-                    shap_values = explainer.shap_values(input_df)
+try:
+    import shap
 
-                    feature_importance = pd.Series(np.abs(shap_values[0]), index=input_df.columns)
-                    feature_importance = feature_importance.sort_values(ascending=False)
+    # Encode object columns to numeric
+    input_df_encoded = input_df.copy()
+    input_df_encoded["Smoking_Status"] = input_df_encoded["Smoking_Status"].map({
+        "Never smoked": 0,
+        "Former smoker": 1,
+        "Current smoker": 2
+    })
+    input_df_encoded["GENDER"] = input_df_encoded["GENDER"].map({
+        "Male": 0,
+        "Female": 1
+    })
 
-                    fig = go.Figure(data=[go.Pie(labels=feature_importance.index, values=feature_importance.values, hole=0.4)])
-                    fig.update_layout(title="Factors Contributing to Your Risk", margin=dict(t=20, b=20, l=20, r=20))
-                    st.plotly_chart(fig, use_container_width=True)
+    # Create explainer
+    explainer = shap.Explainer(model)
+    shap_values = explainer(input_df_encoded)
+
+    # Prepare data for pie chart
+    feature_importance = pd.Series(
+        np.abs(shap_values.values[0]),
+        index=input_df_encoded.columns
+    ).sort_values(ascending=False)
+
+    fig = go.Figure(data=[go.Pie(labels=feature_importance.index,
+                                 values=feature_importance.values, hole=0.4)])
+    fig.update_layout(title="Factors Contributing to Your Risk",
+                      margin=dict(t=20, b=20, l=20, r=20))
+    st.plotly_chart(fig, use_container_width=True)
+
+except Exception as e:
+    st.warning(f"⚠️ SHAP pie chart could not be generated: {e}")
+
 
                 except Exception as e:
                     st.warning(f"⚠️ SHAP pie chart could not be generated: {e}")
