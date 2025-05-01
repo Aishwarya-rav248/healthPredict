@@ -140,29 +140,29 @@ def show_dashboard(patient_id):
                     preprocessor = model.named_steps["preprocess"]
                     classifier = model.named_steps["classifier"]
 
-                   # Encode + scale the input using the preprocessor
-                   input_transformed = preprocessor.transform(input_df)
+                    # Encode + scale the input using the preprocessor
+                    input_transformed = preprocessor.transform(input_df)
 
-                   # Create SHAP explainer for the classifier
-                   explainer = shap.TreeExplainer(classifier)
+                    # Create SHAP explainer for the classifier
+                    explainer = shap.TreeExplainer(classifier)
 
-                   # Compute SHAP values
-                   shap_values = explainer.shap_values(input_transformed)
+                    # Compute SHAP values
+                    shap_values = explainer.shap_values(input_transformed)
 
-                   # Get feature names (expanded by one-hot encoder)
-                   feature_names = preprocessor.get_feature_names_out()
+                    # Get feature names (expanded by one-hot encoder)
+                    feature_names = preprocessor.get_feature_names_out()
 
-                   # Feature importance
-                   feature_importance = pd.Series(np.abs(shap_values), index=feature_names)
-                   feature_importance = feature_importance.sort_values(ascending=False)
+                    # Feature importance
+                    feature_importance = pd.Series(np.abs(shap_values), index=feature_names)
+                    feature_importance = feature_importance.sort_values(ascending=False)
 
-                   # Plot SHAP pie chart
-                   fig = go.Figure(data=[go.Pie(labels=feature_importance.index, values=feature_importance.values, hole=0.4)])
-                   fig.update_layout(title="Factors Contributing to Your Risk", margin=dict(t=20, b=20, l=20, r=20))
-                   st.plotly_chart(fig, use_container_width=True)
+                    # Plot SHAP pie chart
+                    fig = go.Figure(data=[go.Pie(labels=feature_importance.index, values=feature_importance.values, hole=0.4)])
+                    fig.update_layout(title="Factors Contributing to Your Risk", margin=dict(t=20, b=20, l=20, r=20))
+                    st.plotly_chart(fig, use_container_width=True)
 
                 except Exception as e:
-                   st.warning(f"⚠️ SHAP pie chart could not be generated: {e}")
+                    st.warning(f"⚠️ SHAP pie chart could not be generated: {e}")
 
                 # Insights
                 st.markdown("### Insight & Recommendation")
