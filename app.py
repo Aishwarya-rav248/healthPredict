@@ -7,7 +7,6 @@ from datetime import date
 import shap
 import numpy as np
 
-# ------------------- Setup -------------------
 st.set_page_config(page_title="Health Dashboard", layout="wide")
 
 @st.cache_data
@@ -38,7 +37,6 @@ def save_appointment(patient_id, doctor, appt_date, notes):
     else:
         record.to_csv("appointments.csv", index=False)
 
-# ------------------- Login -------------------
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.patient_id = ""
@@ -54,7 +52,6 @@ def show_login():
         else:
             st.error("Invalid Patient ID. Please try again.")
 
-# ------------------- Dashboard -------------------
 def show_dashboard(patient_id):
     patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
     latest = patient_df.iloc[-1]
@@ -189,15 +186,19 @@ def show_dashboard(patient_id):
                 tips.append("• Control cholesterol with diet and exercise.")
             if row["Diabetes"]:
                 tips.append("• Manage diabetes with regular medical supervision.")
+
             tip_text = "<br>".join(tips)
+
             st.markdown(
-                f\"\"\"<div style='border:1px solid #ccc;border-radius:10px;padding:10px;margin:10px 0;background:#f9f9f9;'>\n
+                f"""
+                <div style='border:1px solid #ccc;border-radius:10px;padding:10px;margin:10px 0;background:#f9f9f9;'>
                 <b>Visit Date:</b> {row['Date'].date()}<br>
                 <b>Height:</b> {row['Height_cm']} cm | <b>Weight:</b> {row['Weight_kg']} kg | <b>BMI:</b> {row['BMI']}<br>
                 <b>BP:</b> {row['Systolic_BP']}/{row['Diastolic_BP']} | <b>Heart Rate:</b> {row['Heart_Rate']} bpm<br>
                 <b>Health Score:</b> {row['Health Score']} | <b>Heart Risk:</b> <span style='background:{color};color:white;padding:2px 5px;border-radius:4px;'>{risk}</span><br>
                 <b>Tips:</b><br>{tip_text}
-                </div>\"\"\", unsafe_allow_html=True
+                </div>
+                """, unsafe_allow_html=True
             )
 
     if st.button("Logout"):
@@ -205,7 +206,6 @@ def show_dashboard(patient_id):
         st.session_state.patient_id = ""
         st.rerun()
 
-# ------------------- Run -------------------
 if st.session_state.logged_in:
     show_dashboard(st.session_state.patient_id)
 else:
