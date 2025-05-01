@@ -124,7 +124,6 @@ def show_dashboard(patient_id):
                 risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
                 st.plotly_chart(donut_chart(label, prediction_proba, risk_color), use_container_width=True)
 
-                # SHAP Visualization
                 try:
                     st.markdown("### Factors Influencing Risk Prediction (Personalized)")
                     preprocessor = model[:-1]
@@ -134,14 +133,14 @@ def show_dashboard(patient_id):
                     shap_values = explainer.shap_values(input_transformed)
 
                     original_columns = input_df.columns.tolist()
-                    try:
-                        feature_names = preprocessor.get_feature_names_out(original_columns)
-                        feature_names = [col.split("__")[0] for col in feature_names]
-                    except:
-                        feature_names = original_columns
+                    feature_names = preprocessor.get_feature_names_out(original_columns)
+                    base_names = [name.split("__")[0] for name in feature_names]
 
                     shap_abs_mean = np.abs(shap_values).mean(axis=0)
-                    feature_importance = pd.Series(shap_abs_mean, index=feature_names).groupby(level=0).sum().sort_values(ascending=False)
+                    feature_importance = pd.DataFrame({
+                        "base": base_names,
+                        "importance": shap_abs_mean
+                    }).groupby("base")["importance"].sum().sort_values(ascending=False)
 
                     fig = go.Figure(data=[go.Pie(labels=feature_importance.head(8).index,
                                                  values=feature_importance.head(8).values,
