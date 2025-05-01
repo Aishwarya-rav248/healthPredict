@@ -137,7 +137,7 @@ def show_dashboard(patient_id):
                     import numpy as np
 
                     # Split the pipeline
-                    preprocessor = model.named_steps["preprocess"]
+                    preprocessor = model.named_steps["preprocessor"]
                     classifier = model.named_steps["classifier"]
 
                     # Encode + scale the input using the preprocessor
