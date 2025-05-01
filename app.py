@@ -124,11 +124,11 @@ def show_dashboard(patient_id):
                     shap_values = explainer.shap_values(input_transformed)
             
                     try:
-                    feature_names = preprocessor.get_feature_names_out(original_columns)
-                    # Clean names like 'column__value' ➝ 'column'
-                    feature_names = [col.split('__')[0] for col in feature_names]
+                        feature_names = preprocessor.get_feature_names_out(original_columns)
+                        # Clean names like 'column__value' ➝ 'column'
+                        feature_names = [col.split('__')[0] for col in feature_names]
                     except:
-                    feature_names = original_columns
+                        feature_names = original_columns
 
                     shap_abs_mean = np.abs(shap_values).mean(axis=0)
                     feature_importance = pd.Series(shap_abs_mean, index=feature_names).sort_values(ascending=False)
