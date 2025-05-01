@@ -4,7 +4,6 @@ import plotly.graph_objects as go
 import joblib
 import os
 from datetime import date
-import streamlit.components.v1 as components
 import shap
 import numpy as np
 
@@ -106,15 +105,29 @@ def show_dashboard(patient_id):
             st.markdown("### Heart Risk Prediction")
             try:
                 model = joblib.load("Heart_Disease_Risk_Model_XGBoost.pkl")
-                input_df = pd.DataFrame([{k: latest[k] for k in [
-                    "Height_cm", "Weight_kg", "BMI", "Systolic_BP", "Diastolic_BP",
-                    "Heart_Rate", "Smoking_Status", "Diabetes", "Hyperlipidemia", "AGE", "GENDER"]}])
+
+                input_df = pd.DataFrame([{
+                    "Height_cm": latest["Height_cm"],
+                    "Weight_kg": latest["Weight_kg"],
+                    "BMI": latest["BMI"],
+                    "Systolic_BP": latest["Systolic_BP"],
+                    "Diastolic_BP": latest["Diastolic_BP"],
+                    "Heart_Rate": latest["Heart_Rate"],
+                    "Smoking_Status": latest["Smoking_Status"],
+                    "Diabetes": latest["Diabetes"],
+                    "Hyperlipidemia": latest["Hyperlipidemia"],
+                    "AGE": latest["AGE"],
+                    "GENDER": latest["GENDER"]
+                }])
+
                 prediction_proba = model.predict_proba(input_df)[0][1] * 100
                 prediction = model.predict(input_df)[0]
+
                 label = "High Risk" if prediction == 1 else "Low Risk"
                 risk_color = "#ff4d4d" if prediction == 1 else "#4caf50"
                 st.plotly_chart(donut_chart(label, prediction_proba, risk_color), use_container_width=True)
 
+                # SHAP Visualization
                 try:
                     st.markdown("### Factors Influencing Risk Prediction (Personalized)")
                     preprocessor = model[:-1]
@@ -122,23 +135,23 @@ def show_dashboard(patient_id):
                     input_transformed = preprocessor.transform(input_df)
                     explainer = shap.TreeExplainer(xgb_model)
                     shap_values = explainer.shap_values(input_transformed)
-            
+
+                    original_columns = input_df.columns.tolist()
                     try:
                         feature_names = preprocessor.get_feature_names_out(original_columns)
-                        # Clean names like 'column__value' ➝ 'column'
-                        feature_names = [col.split('__')[0] for col in feature_names]
+                        feature_names = [col.split("__")[0] for col in feature_names]
                     except:
                         feature_names = original_columns
 
                     shap_abs_mean = np.abs(shap_values).mean(axis=0)
-                    feature_importance = pd.Series(shap_abs_mean, index=feature_names).sort_values(ascending=False)
-                    fig = go.Figure(data=[
-                        go.Pie(labels=feature_importance.head(8).index,
-                               values=feature_importance.head(8).values,
-                               hole=0.4)
-                    ])
+                    feature_importance = pd.Series(shap_abs_mean, index=feature_names).groupby(level=0).sum().sort_values(ascending=False)
+
+                    fig = go.Figure(data=[go.Pie(labels=feature_importance.head(8).index,
+                                                 values=feature_importance.head(8).values,
+                                                 hole=0.4)])
                     fig.update_layout(title="Top Risk Contributors", margin=dict(t=20, b=20, l=20, r=20))
                     st.plotly_chart(fig, use_container_width=True)
+
                 except Exception as e:
                     st.warning(f"SHAP pie chart could not be generated: {e}")
 
@@ -178,14 +191,13 @@ def show_dashboard(patient_id):
                 tips.append("• Manage diabetes with regular medical supervision.")
             tip_text = "<br>".join(tips)
             st.markdown(
-                f"""<div style='border:1px solid #ccc;border-radius:10px;padding:10px;margin:10px 0;background:#f9f9f9;'>
+                f\"\"\"<div style='border:1px solid #ccc;border-radius:10px;padding:10px;margin:10px 0;background:#f9f9f9;'>\n
                 <b>Visit Date:</b> {row['Date'].date()}<br>
                 <b>Height:</b> {row['Height_cm']} cm | <b>Weight:</b> {row['Weight_kg']} kg | <b>BMI:</b> {row['BMI']}<br>
                 <b>BP:</b> {row['Systolic_BP']}/{row['Diastolic_BP']} | <b>Heart Rate:</b> {row['Heart_Rate']} bpm<br>
                 <b>Health Score:</b> {row['Health Score']} | <b>Heart Risk:</b> <span style='background:{color};color:white;padding:2px 5px;border-radius:4px;'>{risk}</span><br>
                 <b>Tips:</b><br>{tip_text}
-                </div>
-                """, unsafe_allow_html=True
+                </div>\"\"\", unsafe_allow_html=True
             )
 
     if st.button("Logout"):
