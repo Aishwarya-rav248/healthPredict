@@ -130,33 +130,43 @@ def show_dashboard(patient_id):
                 st.plotly_chart(donut_chart(label, prediction_proba, risk_color), use_container_width=True)
 
                 # SHAP visual (corrected)
-                st.markdown("### 🔎 Factors Influencing Risk Prediction (Personalized)")
                 try:
+                    st.markdown("### 🔎 Factors Influencing Risk Prediction (Personalized)")
+                    import shap
+                    import xgboost
+                    import numpy as np
+
+                    # Manually encode Smoking_Status and GENDER
                     input_df_encoded = input_df.copy()
                     input_df_encoded["Smoking_Status"] = input_df_encoded["Smoking_Status"].map({
-                        "Never smoked": 0, "Former smoker": 1, "Current smoker": 2
-                    })
+                            "Never smoked": 0,
+                            "Former smoker": 1,
+                            "Current smoker": 2
+                    }).fillna(0)
+
                     input_df_encoded["GENDER"] = input_df_encoded["GENDER"].map({
-                        "Male": 0, "Female": 1
-                    })
+                         "Male": 0,
+                         "Female": 1
+                    }).fillna(0)
 
-                    explainer = shap.Explainer(model.named_steps["classifier"])
-                    shap_values = explainer(input_df_encoded)
+                    # Convert to proper numpy array
+                    data_for_shap = input_df_encoded.values
 
-                    feature_importance = pd.Series(
-                        np.abs(shap_values.values[0]),
-                        index=input_df_encoded.columns
-                    ).sort_values(ascending=False)
+                    # Create SHAP explainer
+                    explainer = shap.Explainer(model)
 
-                    fig = go.Figure(data=[go.Pie(
-                        labels=feature_importance.index,
-                        values=feature_importance.values,
-                        hole=0.4
-                    )])
-                    fig.update_layout(
-                        title="Factors Contributing to Your Risk",
-                        margin=dict(t=20, b=20, l=20, r=20)
-                    )
+                    # Get SHAP values
+                    shap_values = explainer(data_for_shap)
+
+                    # Get absolute values
+                    feature_importance = pd.Series(np.abs(shap_values.values[0]), index=input_df_encoded.columns)
+                    feature_importance = feature_importance.sort_values(ascending=False)
+
+                    # Plot pie chart
+                    fig = go.Figure(data=[go.Pie(labels=feature_importance.index,
+                                                 values=feature_importance.values,
+                                                 hole=0.4)])
+                    fig.update_layout(title="Factors Contributing to Your Risk", margin=dict(t=20, b=20, l=20, r=20))
                     st.plotly_chart(fig, use_container_width=True)
 
                 except Exception as e:
