@@ -135,7 +135,8 @@ def show_dashboard(patient_id):
                     original_columns = model.feature_names_in_
                     input_df = input_df[original_columns]  # reorder to match training
                     feature_names = preprocessor.get_feature_names_out(original_columns)
-                    base_names = [name.split("__")[0] for name in feature_names]
+                    base_names = [name.split("__")[1].split("_")[0] if "__" in name else name for name in feature_names]
+
 
                     shap_abs_mean = np.abs(shap_values).mean(axis=0)
                     feature_importance = pd.DataFrame({
