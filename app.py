@@ -86,14 +86,23 @@ def show_dashboard(patient_id):
                 box-shadow: 1px 1px 6px #ddd;
                 height: 100%;
             }
-            .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
-            .full { width: 100%; margin-top: 1rem; }
+            .grid3 {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 1rem;
+            }
+            .full {
+                width: 100%;
+                margin-top: 1rem;
+            }
             </style>
         """, unsafe_allow_html=True)
 
         st.markdown(f"<h2 style='text-align:center;'>Welcome to HealthPredict</h2>", unsafe_allow_html=True)
 
+        # ------------------- 3 CARDS SIDE BY SIDE -------------------
         st.markdown("<div class='grid3'>", unsafe_allow_html=True)
+
         st.markdown(f"""
             <div class='card'>
             <h4>Patient Details</h4>
@@ -123,8 +132,10 @@ def show_dashboard(patient_id):
             Heart Disease: {'Yes' if latest['Heart_Disease'] else 'No'}
             </div>
         """, unsafe_allow_html=True)
+
         st.markdown("</div>", unsafe_allow_html=True)
 
+        # ------------------- Donut Charts + SHAP -------------------
         col1, col2, col3 = st.columns([1, 1, 1])
         with col1:
             st.markdown("<div class='card'>", unsafe_allow_html=True)
@@ -171,6 +182,7 @@ def show_dashboard(patient_id):
             st.plotly_chart(pie, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
+        # ------------------- Insights -------------------
         st.markdown("<div class='card full'>", unsafe_allow_html=True)
         st.markdown("### 💡 Insights & Recommendations")
         if score >= 80 and label == "Low Risk":
@@ -195,6 +207,7 @@ def show_dashboard(patient_id):
             st.write("• Hyperlipidemia – adopt a low-fat diet.")
         st.markdown("</div>", unsafe_allow_html=True)
 
+    # ------------------- Visit History -------------------
     with tab2:
         st.markdown("## Visit History")
         st.info(f"Total Visits: {len(patient_df)} | Avg. Health Score: {round(patient_df['Health Score'].mean(), 1)}")
