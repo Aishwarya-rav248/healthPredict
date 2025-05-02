@@ -66,6 +66,17 @@ def show_dashboard(patient_id):
     tab1, tab2 = st.tabs(["Overview", "Visit History"])
 
     with tab1:
+        with st.sidebar:
+            st.markdown("## Book Appointment")
+            doctor = st.selectbox("Choose Doctor", ["Cardiologist", "General Physician", "Endocrinologist", "Dietician"])
+            appt_date = st.date_input("Select Date", min_value=date.today())
+            notes = st.text_input("Notes (optional)")
+            if st.button("Book Appointment"):
+                save_appointment(patient_id, doctor, appt_date, notes)
+                st.success(f"Appointment booked with {doctor} on {appt_date.strftime('%b %d, %Y')}")
+
+            top_k = st.selectbox("Top SHAP Features", options=[2, 3, 4, 5, 6, 7, 8], index=2, help="Choose how many top risk factors to display")
+
         st.markdown("""
             <style>
             .card {
@@ -76,16 +87,13 @@ def show_dashboard(patient_id):
                 height: 100%;
             }
             .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
-            .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
             .full { width: 100%; margin-top: 1rem; }
             </style>
         """, unsafe_allow_html=True)
 
         st.markdown(f"<h2 style='text-align:center;'>Welcome to HealthPredict</h2>", unsafe_allow_html=True)
 
-        # ➤ Grid 1: Patient Info + Metrics
         st.markdown("<div class='grid3'>", unsafe_allow_html=True)
-
         st.markdown(f"""
             <div class='card'>
             <h4>Patient Details</h4>
@@ -115,12 +123,9 @@ def show_dashboard(patient_id):
             Heart Disease: {'Yes' if latest['Heart_Disease'] else 'No'}
             </div>
         """, unsafe_allow_html=True)
-
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # ➤ Grid 2: Donut charts + SHAP
         col1, col2, col3 = st.columns([1, 1, 1])
-
         with col1:
             st.markdown("<div class='card'>", unsafe_allow_html=True)
             st.markdown("### Health Score")
@@ -156,18 +161,18 @@ def show_dashboard(patient_id):
             mean_abs = np.abs(shap_values).mean(axis=0)
             importance = pd.DataFrame({"feature": base_names, "value": mean_abs}) \
                          .groupby("feature")["value"].sum().sort_values(ascending=False)
-            top = 4
-            labels = importance.head(top).index.tolist() + ["Others"]
-            values = importance.head(top).values.tolist() + [importance.iloc[top:].sum()]
+            labels = importance.head(top_k).index.tolist()
+            values = importance.head(top_k).values.tolist()
+            if len(importance) > top_k:
+                labels.append("Others")
+                values.append(importance.iloc[top_k:].sum())
             pie = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.4)])
             pie.update_layout(margin=dict(t=10, b=10, l=10, r=10), height=220)
             st.plotly_chart(pie, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
-        # ➤ Insights card
         st.markdown("<div class='card full'>", unsafe_allow_html=True)
         st.markdown("### 💡 Insights & Recommendations")
-
         if score >= 80 and label == "Low Risk":
             st.success("✅ Health score and risk are aligned. Keep up the good habits!")
         elif score < 60 and label == "High Risk":
@@ -176,22 +181,20 @@ def show_dashboard(patient_id):
             st.warning("⚠️ High score but elevated risk. Schedule a full check-up.")
         else:
             st.info("🔍 Low score but currently low risk. Improve your lifestyle.")
-
         if latest["BMI"] > 25:
-            st.write("• High BMI – focus on a balanced diet and exercise.")
+            st.write("• High BMI – focus on diet and exercise.")
         if latest["Heart_Rate"] > 90:
-            st.write("• Elevated heart rate – consider stress reduction.")
+            st.write("• Elevated heart rate – reduce stress.")
         if latest["Systolic_BP"] > 130 or latest["Diastolic_BP"] > 85:
-            st.write("• High BP – reduce salt and monitor regularly.")
+            st.write("• High BP – reduce salt and monitor.")
         if "current" in str(latest["Smoking_Status"]).lower():
-            st.write("• Smoking detected – strongly consider quitting.")
+            st.write("• Smoking – quit to reduce heart risk.")
         if latest["Diabetes"]:
-            st.write("• Diabetes – follow medication and monitor sugar.")
+            st.write("• Diabetes – monitor sugar, follow meds.")
         if latest["Hyperlipidemia"]:
-            st.write("• Hyperlipidemia – reduce saturated fats and stay active.")
+            st.write("• Hyperlipidemia – adopt a low-fat diet.")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # ➤ Visit History (unchanged)
     with tab2:
         st.markdown("## Visit History")
         st.info(f"Total Visits: {len(patient_df)} | Avg. Health Score: {round(patient_df['Health Score'].mean(), 1)}")
@@ -214,7 +217,6 @@ def show_dashboard(patient_id):
                 tips.append("• Monitor cholesterol.")
             if row["Diabetes"]:
                 tips.append("• Track glucose levels.")
-
             st.markdown(
                 f"""
                 <div style='border:1px solid #ccc; border-radius:10px; padding:10px; background:#f9f9f9; margin:10px 0;'>
