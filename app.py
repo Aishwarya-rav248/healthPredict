@@ -51,58 +51,52 @@ if 'logged_in' not in st.session_state:
 def show_login():
     st.markdown("""
         <style>
-        .login-container {
+        .login-page {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 90vh;
         }
         .login-box {
-            background-color: white;
-            border-radius: 15px;
+            background-color: #ffffff;
             padding: 2rem;
-            width: 300px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 320px;
             text-align: center;
         }
-        .login-box h2 {
-            margin-bottom: 1.2rem;
-            font-size: 1.5rem;
+        .stTextInput input {
+            height: 35px;
+            font-size: 14px;
+            text-align: center;
         }
-        .small-input input {
-            padding: 0.4rem 0.6rem;
-            font-size: 0.9rem;
-            height: 2.2rem;
-        }
-        .small-button button {
-            height: 2.3rem;
-            font-size: 0.9rem;
+        .stButton>button {
+            width: 100%;
+            height: 35px;
+            font-size: 14px;
+            border-radius: 20px;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            color: white;
+            border: none;
         }
         </style>
-        <div class="login-container">
+        <div class="login-page">
             <div class="login-box">
-                <h2>Login</h2>
+                <h3>Login</h3>
     """, unsafe_allow_html=True)
 
-    with st.container():
-        with st.form("login_form"):
-            st.markdown('<div class="small-input">', unsafe_allow_html=True)
-            patient_id = st.text_input("Patient ID", placeholder="Enter Patient ID", key="patient_login_id")
-            st.markdown("</div>", unsafe_allow_html=True)
+    patient_id = st.text_input("Enter Patient ID")
 
-            st.markdown('<div class="small-button">', unsafe_allow_html=True)
-            submitted = st.form_submit_button("Login")
-            st.markdown("</div>", unsafe_allow_html=True)
-
-            if submitted:
-                if patient_id in df["patient"].astype(str).values:
-                    st.session_state.logged_in = True
-                    st.session_state.patient_id = patient_id
-                    st.rerun()
-                else:
-                    st.error("Invalid Patient ID. Please try again.")
+    if st.button("Login"):
+        if patient_id in df["patient"].astype(str).values:
+            st.session_state.logged_in = True
+            st.session_state.patient_id = patient_id
+            st.rerun()
+        else:
+            st.error("Invalid Patient ID. Please try again.")
 
     st.markdown("</div></div>", unsafe_allow_html=True)
+
 
 
 
