@@ -47,36 +47,31 @@ def save_appointment(patient_id, doctor, appt_date, notes):
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.patient_id = ""
-
 def show_login():
     st.markdown("""
         <style>
-        .login-container {
+        .centered-login {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 80vh;
         }
-        .login-box {
-            width: 350px;
+        .login-card {
             background-color: #f9f9f9;
             padding: 2rem;
-            border-radius: 10px;
+            border-radius: 12px;
             box-shadow: 0 0 10px rgba(0,0,0,0.05);
-            text-align: center;
-        }
-        .login-box input {
-            width: 100% !important;
+            width: 320px;
             text-align: center;
         }
         </style>
-        <div class="login-container">
-            <div class="login-box">
-                <h2>Welcome to HealthPredict</h2>
+        <div class="centered-login">
+            <div class="login-card">
     """, unsafe_allow_html=True)
 
-    patient_id = st.text_input("", placeholder="Enter Patient ID", key="patient_id_input", label_visibility="collapsed")
-    
+    st.markdown("### Welcome to HealthPredict", unsafe_allow_html=True)
+    patient_id = st.text_input("Patient ID", label_visibility="visible", key="patient_login")
+
     if st.button("Login"):
         if patient_id in df["patient"].astype(str).values:
             st.session_state.logged_in = True
