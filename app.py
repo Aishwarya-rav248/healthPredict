@@ -65,29 +65,30 @@ def show_login():
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             text-align: center;
         }
-        .stTextInput > div > div > input {
-            height: 35px;
-            font-size: 14px;
-            padding: 5px;
-            text-align: center;
+        div[data-testid="stTextInput"] {
+            width: 100% !important;
         }
-        .stButton button {
-            height: 35px;
-            width: 100%;
-            font-size: 14px;
+        input {
+            text-align: center;
+            font-size: 14px !important;
+            height: 35px !important;
+        }
+        button[kind="primary"] {
+            width: 100% !important;
+            height: 36px !important;
+            font-size: 14px !important;
+            border-radius: 20px;
             background: linear-gradient(to right, #667eea, #764ba2);
             color: white;
             border: none;
-            border-radius: 20px;
         }
         </style>
-
         <div class="login-page">
             <div class="login-card">
                 <h3>Login</h3>
     """, unsafe_allow_html=True)
 
-    patient_id = st.text_input("Enter Patient ID")
+    patient_id = st.text_input("Enter Patient ID", key="login_id")
 
     if st.button("Login"):
         if patient_id in df["patient"].astype(str).values:
@@ -98,7 +99,6 @@ def show_login():
             st.error("Invalid Patient ID. Please try again.")
 
     st.markdown("</div></div>", unsafe_allow_html=True)
-
 
 def show_dashboard(patient_id):
     patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
