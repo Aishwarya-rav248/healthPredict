@@ -101,39 +101,63 @@ def show_dashboard(patient_id):
         st.markdown(f"<h2 style='text-align:center;'>Welcome to HealthPredict</h2>", unsafe_allow_html=True)
 
         # ------------------- 3 CARDS SIDE BY SIDE -------------------
-        st.markdown("<div class='grid3'>", unsafe_allow_html=True)
-
-        st.markdown(f"""
-            <div class='card'>
-            <h4>Patient Details</h4>
-            ID: {patient_id}<br>
-            Age: {latest['AGE']}<br>
-            Gender: {latest['GENDER']}<br>
-            Height: {latest['Height_cm']} cm<br>
-            Weight: {latest['Weight_kg']} kg
-            </div>
+        # CSS for card grid
+          st.markdown("""
+             <style>
+             .card {
+                 background-color: #f2f2f2;
+                 padding: 1.2rem;
+                 border-radius: 10px;
+                 box-shadow: 1px 1px 6px #ddd;
+                 height: 100%;
+            }
+            .grid3 {
+                 display: grid;
+                 grid-template-columns: 1fr 1fr 1fr;
+                 gap: 1rem;
+            }
+             </style>
         """, unsafe_allow_html=True)
 
-        st.markdown(f"""
-            <div class='card'>
-            <h4>Health Metrics</h4>
-            BMI: {latest['BMI']}<br>
-            BP: {latest['Systolic_BP']}/{latest['Diastolic_BP']}<br>
-            Heart Rate: {latest['Heart_Rate']} bpm<br>
-            Smoking: {latest['Smoking_Status']}
-            </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown(f"""
-            <div class='card'>
-            <h4>Conditions</h4>
-            Diabetes: {'Yes' if latest['Diabetes'] else 'No'}<br>
-            Hyperlipidemia: {'Yes' if latest['Hyperlipidemia'] else 'No'}<br>
-            Heart Disease: {'Yes' if latest['Heart_Disease'] else 'No'}
-            </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("</div>", unsafe_allow_html=True)
+        # Combined grid for 3 cards
+          st.markdown("""
+              <div class='grid3'>
+                  <div class='card'>
+                       <h4>Patient Details</h4>
+                       ID: {id}<br>
+                       Age: {age}<br>
+                       Gender: {gender}<br>
+                       Height: {height} cm<br>
+                       Weight: {weight} kg
+                  </div>
+                  <div class='card'>
+                       <h4>Health Metrics</h4>
+                       BMI: {bmi}<br>
+                       BP: {bp}<br>
+                       Heart Rate: {hr} bpm<br>
+                       Smoking: {smoking}
+                  </div>
+                  <div class='card'>
+                       <h4>Conditions</h4>
+                       Diabetes: {diabetes}<br>
+                       Hyperlipidemia: {lipid}<br>
+                       Heart Disease: {heart}
+                  </div>
+              </div>
+         """.format(
+            id=st.session_state.patient_id,
+            age=latest["AGE"],
+            gender=latest["GENDER"],
+            height=latest["Height_cm"],
+            weight=latest["Weight_kg"],
+            bmi=latest["BMI"],
+            bp=f"{latest['Systolic_BP']}/{latest['Diastolic_BP']}",
+            hr=latest["Heart_Rate"],
+            smoking=latest["Smoking_Status"],
+            diabetes="Yes" if latest["Diabetes"] else "No",
+            lipid="Yes" if latest["Hyperlipidemia"] else "No",
+            heart="Yes" if latest["Heart_Disease"] else "No"
+        ),  unsafe_allow_html=True)
 
         # ------------------- Donut Charts + SHAP -------------------
         col1, col2, col3 = st.columns([1, 1, 1])
