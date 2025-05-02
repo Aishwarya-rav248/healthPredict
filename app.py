@@ -68,7 +68,7 @@ def show_dashboard(patient_id):
     with tab1:
         with st.sidebar:
             st.markdown("## Book Appointment")
-            doctor = st.selectbox("Choose Doctor", ["Cardiologist", "General Physician", "Endocrinologist", "Dietician"])
+            doctor = st.selectbox("Choose Doctor", ["Cardiologist", "General Physician", "Dietician"])
             appt_date = st.date_input("Select Date", min_value=date.today())
             notes = st.text_input("Notes (optional)")
             if st.button("Book Appointment"):
