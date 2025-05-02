@@ -75,7 +75,7 @@ def show_dashboard(patient_id):
                 save_appointment(patient_id, doctor, appt_date, notes)
                 st.success(f"Appointment booked with {doctor} on {appt_date.strftime('%b %d, %Y')}")
 
-            top_k = st.selectbox("Top SHAP Features", options=[2, 3, 4, 5, 6, 7, 8], index=2, help="Choose how many top risk factors to display")
+            top_k = st.selectbox("Top SHAP Features", options=[2, 3, 4, 5, 6, 7, 8], index=2)
 
         st.markdown("""
             <style>
@@ -91,60 +91,36 @@ def show_dashboard(patient_id):
                 grid-template-columns: 1fr 1fr 1fr;
                 gap: 1rem;
             }
-            .full {
-                width: 100%;
-                margin-top: 1rem;
-            }
             </style>
         """, unsafe_allow_html=True)
 
-        st.markdown(f"<h2 style='text-align:center;'>Welcome to HealthPredict</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align:center;'>Welcome to HealthPredict</h2>", unsafe_allow_html=True)
 
-        # ------------------- 3 CARDS SIDE BY SIDE -------------------
-        # CSS for card grid
-          st.markdown("""
-             <style>
-             .card {
-                 background-color: #f2f2f2;
-                 padding: 1.2rem;
-                 border-radius: 10px;
-                 box-shadow: 1px 1px 6px #ddd;
-                 height: 100%;
-            }
-            .grid3 {
-                 display: grid;
-                 grid-template-columns: 1fr 1fr 1fr;
-                 gap: 1rem;
-            }
-             </style>
-        """, unsafe_allow_html=True)
-
-        # Combined grid for 3 cards
-          st.markdown("""
-              <div class='grid3'>
-                  <div class='card'>
-                       <h4>Patient Details</h4>
-                       ID: {id}<br>
-                       Age: {age}<br>
-                       Gender: {gender}<br>
-                       Height: {height} cm<br>
-                       Weight: {weight} kg
-                  </div>
-                  <div class='card'>
-                       <h4>Health Metrics</h4>
-                       BMI: {bmi}<br>
-                       BP: {bp}<br>
-                       Heart Rate: {hr} bpm<br>
-                       Smoking: {smoking}
-                  </div>
-                  <div class='card'>
-                       <h4>Conditions</h4>
-                       Diabetes: {diabetes}<br>
-                       Hyperlipidemia: {lipid}<br>
-                       Heart Disease: {heart}
-                  </div>
-              </div>
-         """.format(
+        st.markdown("""
+            <div class='grid3'>
+                <div class='card'>
+                    <h4>Patient Details</h4>
+                    ID: {id}<br>
+                    Age: {age}<br>
+                    Gender: {gender}<br>
+                    Height: {height} cm<br>
+                    Weight: {weight} kg
+                </div>
+                <div class='card'>
+                    <h4>Health Metrics</h4>
+                    BMI: {bmi}<br>
+                    BP: {bp}<br>
+                    Heart Rate: {hr} bpm<br>
+                    Smoking: {smoking}
+                </div>
+                <div class='card'>
+                    <h4>Conditions</h4>
+                    Diabetes: {diabetes}<br>
+                    Hyperlipidemia: {lipid}<br>
+                    Heart Disease: {heart}
+                </div>
+            </div>
+        """.format(
             id=st.session_state.patient_id,
             age=latest["AGE"],
             gender=latest["GENDER"],
@@ -157,7 +133,7 @@ def show_dashboard(patient_id):
             diabetes="Yes" if latest["Diabetes"] else "No",
             lipid="Yes" if latest["Hyperlipidemia"] else "No",
             heart="Yes" if latest["Heart_Disease"] else "No"
-        ),  unsafe_allow_html=True)
+        ), unsafe_allow_html=True)
 
         # ------------------- Donut Charts + SHAP -------------------
         col1, col2, col3 = st.columns([1, 1, 1])
