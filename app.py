@@ -128,25 +128,27 @@ def show_dashboard(patient_id):
                     st.markdown("### Factors Influencing Risk Prediction (Personalized)")
                     preprocessor = model[:-1]
                     xgb_model = model.named_steps["classifier"]
+                    input_df = input_df[model.feature_names_in_]
                     input_transformed = preprocessor.transform(input_df)
                     explainer = shap.TreeExplainer(xgb_model)
                     shap_values = explainer.shap_values(input_transformed)
 
-                    original_columns = model.feature_names_in_
-                    input_df = input_df[original_columns]  # reorder to match training
-                    feature_names = preprocessor.get_feature_names_out(original_columns)
+                    feature_names = preprocessor.get_feature_names_out(model.feature_names_in_)
                     base_names = [name.split("__")[1].split("_")[0] if "__" in name else name for name in feature_names]
-
 
                     shap_abs_mean = np.abs(shap_values).mean(axis=0)
                     feature_importance = pd.DataFrame({
-                        "base": base_names,
+                        "feature": base_names,
                         "importance": shap_abs_mean
-                    }).groupby("base")["importance"].sum().sort_values(ascending=False)
+                    }).groupby("feature")["importance"].sum().sort_values(ascending=False)
 
-                    fig = go.Figure(data=[go.Pie(labels=feature_importance.head(8).index,
-                                                 values=feature_importance.head(8).values,
-                                                 hole=0.4)])
+                    top_k = 4
+                    top_features = feature_importance.head(top_k)
+                    others_sum = feature_importance.iloc[top_k:].sum()
+                    labels = top_features.index.tolist() + (["Others"] if others_sum > 0 else [])
+                    values = top_features.values.tolist() + ([others_sum] if others_sum > 0 else [])
+
+                    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.4)])
                     fig.update_layout(title="Top Risk Contributors", margin=dict(t=20, b=20, l=20, r=20))
                     st.plotly_chart(fig, use_container_width=True)
 
