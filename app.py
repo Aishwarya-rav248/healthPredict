@@ -55,52 +55,50 @@ def show_login():
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 90vh;
+            height: 100vh;
         }
-        .login-box {
+        .login-card {
             background-color: white;
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 2rem;
             width: 320px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             text-align: center;
         }
-        .login-input .stTextInput > div > div > input {
+        .stTextInput > div > div > input {
             height: 35px;
             font-size: 14px;
-            border-radius: 6px;
+            padding: 5px;
             text-align: center;
         }
-        .login-button .stButton > button {
+        .stButton button {
+            height: 35px;
+            width: 100%;
+            font-size: 14px;
             background: linear-gradient(to right, #667eea, #764ba2);
             color: white;
             border: none;
             border-radius: 20px;
-            height: 36px;
-            font-size: 14px;
-            font-weight: bold;
         }
         </style>
+
         <div class="login-page">
-            <div class="login-box">
+            <div class="login-card">
                 <h3>Login</h3>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="login-input">', unsafe_allow_html=True)
-    patient_id = st.text_input("Enter Patient ID", key="login_patient_id")
-    st.markdown("</div>", unsafe_allow_html=True)
+    patient_id = st.text_input("Enter Patient ID")
 
-    st.markdown('<div class="login-button">', unsafe_allow_html=True)
-    login_clicked = st.button("Login")
-    st.markdown("</div></div></div>", unsafe_allow_html=True)
-
-    if login_clicked:
+    if st.button("Login"):
         if patient_id in df["patient"].astype(str).values:
             st.session_state.logged_in = True
             st.session_state.patient_id = patient_id
             st.rerun()
         else:
             st.error("Invalid Patient ID. Please try again.")
+
+    st.markdown("</div></div>", unsafe_allow_html=True)
+
 
 def show_dashboard(patient_id):
     patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
