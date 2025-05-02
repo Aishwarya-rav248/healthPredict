@@ -68,6 +68,9 @@ def show_dashboard(patient_id):
                 save_appointment(patient_id, doctor, appt_date, notes)
                 st.success(f"Appointment booked with {doctor} on {appt_date.strftime('%b %d, %Y')}")
 
+            # NEW: Slider for SHAP Top-K control
+            top_k = st.slider("Number of Top Contributors to Show", min_value=2, max_value=10, value=4)
+
         st.markdown("## Patient Overview")
         top1, top2, top3 = st.columns([1.2, 1.2, 1.2])
 
@@ -142,7 +145,6 @@ def show_dashboard(patient_id):
                         "importance": shap_abs_mean
                     }).groupby("feature")["importance"].sum().sort_values(ascending=False)
 
-                    top_k = 4
                     top_features = feature_importance.head(top_k)
                     others_sum = feature_importance.iloc[top_k:].sum()
                     labels = top_features.index.tolist() + (["Others"] if others_sum > 0 else [])
