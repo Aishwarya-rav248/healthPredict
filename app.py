@@ -53,25 +53,30 @@ def show_login():
         <style>
         .login-container {
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            height: 70vh;
+            align-items: center;
+            height: 80vh;
         }
         .login-box {
             width: 350px;
             background-color: #f9f9f9;
             padding: 2rem;
             border-radius: 10px;
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        .login-box input {
+            width: 100% !important;
+            text-align: center;
         }
         </style>
         <div class="login-container">
             <div class="login-box">
-                <h2 style="text-align:center;">Welcome to HealthPredict</h2>
+                <h2>Welcome to HealthPredict</h2>
     """, unsafe_allow_html=True)
 
-    patient_id = st.text_input("Enter Patient ID", key="login")
+    patient_id = st.text_input("", placeholder="Enter Patient ID", key="patient_id_input", label_visibility="collapsed")
+    
     if st.button("Login"):
         if patient_id in df["patient"].astype(str).values:
             st.session_state.logged_in = True
