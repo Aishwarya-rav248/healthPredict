@@ -1,3 +1,5 @@
+GOOD UI, BUT SIDEBAR MISSING
+
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -49,48 +51,8 @@ if 'logged_in' not in st.session_state:
     st.session_state.patient_id = ""
 
 def show_login():
-    st.markdown("""
-        <style>
-        .login-page {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .login-card {
-            background-color: white;
-            border-radius: 12px;
-            padding: 2rem;
-            width: 320px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .stTextInput input {
-            height: 35px !important;
-            font-size: 14px !important;
-            text-align: center;
-        }
-        .stButton>button {
-            width: 100% !important;
-            height: 36px !important;
-            font-size: 14px !important;
-            border-radius: 20px !important;
-            background: linear-gradient(to right, #667eea, #764ba2) !important;
-            color: white !important;
-            margin-top: 12px;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
-    # Outer layout container
-    st.markdown('<div class="login-page"><div class="login-card">', unsafe_allow_html=True)
-
-    # Login title
-    st.markdown("<h3>Login</h3>", unsafe_allow_html=True)
-
-    # Streamlit widgets INSIDE the login card
-    patient_id = st.text_input("Enter Patient ID", key="login_input")
-
+    st.title("Welcome to HealthPredict")
+    patient_id = st.text_input("Enter Patient ID")
     if st.button("Login"):
         if patient_id in df["patient"].astype(str).values:
             st.session_state.logged_in = True
@@ -98,9 +60,6 @@ def show_login():
             st.rerun()
         else:
             st.error("Invalid Patient ID. Please try again.")
-
-    # Close the card and page layout
-    st.markdown("</div></div>", unsafe_allow_html=True)
 
 def show_dashboard(patient_id):
     patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
