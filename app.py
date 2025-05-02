@@ -47,32 +47,58 @@ def save_appointment(patient_id, doctor, appt_date, notes):
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.patient_id = ""
+
 def show_login():
     st.markdown("""
         <style>
-        .centered-login {
+        body {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        .login-container {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 80vh;
+            height: 90vh;
         }
-        .login-card {
-            background-color: #f9f9f9;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.05);
-            width: 320px;
+        .login-box {
+            background-color: white;
+            border-radius: 15px;
+            padding: 2.5rem 2rem;
+            width: 350px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
+        .login-box h2 {
+            margin-bottom: 1.5rem;
+        }
+        .login-box input {
+            border-radius: 5px !important;
+            text-align: center !important;
+        }
+        .login-button {
+            background: linear-gradient(to right, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 0.6rem 1rem;
+            border-radius: 25px;
+            width: 100%;
+            font-weight: bold;
+            cursor: pointer;
+        }
         </style>
-        <div class="centered-login">
-            <div class="login-card">
+
+        <div class="login-container">
+            <div class="login-box">
+                <h2>Login</h2>
     """, unsafe_allow_html=True)
 
-    st.markdown("### Welcome to HealthPredict", unsafe_allow_html=True)
-    patient_id = st.text_input("Patient ID", label_visibility="visible", key="patient_login")
+    patient_id = st.text_input("", placeholder="Enter Patient ID", label_visibility="collapsed", key="login_id")
 
-    if st.button("Login"):
+    login_clicked = st.button("Login", use_container_width=True)
+
+    st.markdown("</div></div>", unsafe_allow_html=True)
+
+    if login_clicked:
         if patient_id in df["patient"].astype(str).values:
             st.session_state.logged_in = True
             st.session_state.patient_id = patient_id
@@ -80,7 +106,6 @@ def show_login():
         else:
             st.error("Invalid Patient ID. Please try again.")
 
-    st.markdown("</div></div>", unsafe_allow_html=True)
 
 def show_dashboard(patient_id):
     patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
