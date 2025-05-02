@@ -49,8 +49,29 @@ if 'logged_in' not in st.session_state:
     st.session_state.patient_id = ""
 
 def show_login():
-    st.title("Welcome to HealthPredict")
-    patient_id = st.text_input("Enter Patient ID")
+    st.markdown("""
+        <style>
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 70vh;
+        }
+        .login-box {
+            width: 350px;
+            background-color: #f9f9f9;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+        }
+        </style>
+        <div class="login-container">
+            <div class="login-box">
+                <h2 style="text-align:center;">Welcome to HealthPredict</h2>
+    """, unsafe_allow_html=True)
+
+    patient_id = st.text_input("Enter Patient ID", key="login")
     if st.button("Login"):
         if patient_id in df["patient"].astype(str).values:
             st.session_state.logged_in = True
@@ -58,6 +79,8 @@ def show_login():
             st.rerun()
         else:
             st.error("Invalid Patient ID. Please try again.")
+
+    st.markdown("</div></div>", unsafe_allow_html=True)
 
 def show_dashboard(patient_id):
     patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
