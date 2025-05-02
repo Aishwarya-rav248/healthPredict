@@ -55,7 +55,7 @@ def show_login():
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            height: 90vh;
         }
         .login-card {
             background-color: white;
@@ -65,38 +65,35 @@ def show_login():
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             text-align: center;
         }
-        .stTextInput > div > div > input {
-            height: 35px;
-            font-size: 14px;
-            padding: 5px;
-            text-align: center;
+        div[data-testid="stTextInput"] {
+            width: 100% !important;
+            margin-top: 1rem;
         }
-        .stButton button {
-            height: 35px;
-            width: 100%;
-            font-size: 14px;
-            background: linear-gradient(to right, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 20px;
+        input {
+            text-align: center !important;
+            font-size: 14px !important;
+            height: 36px !important;
+        }
+        div.stButton > button {
+            width: 100% !important;
+            height: 36px !important;
+            font-size: 14px !important;
+            border-radius: 20px !important;
+            background: linear-gradient(to right, #667eea, #764ba2) !important;
+            color: white !important;
+            border: none !important;
+            margin-top: 1rem;
         }
         </style>
+        <div class="login-page">
+            <div class="login-card">
+                <h3>Login</h3>
     """, unsafe_allow_html=True)
 
-    # Layout container
-    with st.container():
-        st.markdown('<div class="login-page"><div class="login-card">', unsafe_allow_html=True)
+    # Use Streamlit input and button INSIDE the card
+    patient_id = st.text_input("Enter Patient ID", key="login_input")
 
-        st.markdown("<h3>Login</h3>", unsafe_allow_html=True)
-
-        patient_id = st.text_input("Enter Patient ID", key="patient_id", label_visibility="visible")
-
-        login_clicked = st.button("Login")
-
-        st.markdown("</div></div>", unsafe_allow_html=True)
-
-    # Process login
-    if login_clicked:
+    if st.button("Login"):
         if patient_id in df["patient"].astype(str).values:
             st.session_state.logged_in = True
             st.session_state.patient_id = patient_id
@@ -104,6 +101,7 @@ def show_login():
         else:
             st.error("Invalid Patient ID. Please try again.")
 
+    st.markdown("</div></div>", unsafe_allow_html=True)
 
 def show_dashboard(patient_id):
     patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
