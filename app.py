@@ -58,26 +58,27 @@ def show_login():
             height: 90vh;
         }
         .login-box {
-            background-color: #ffffff;
+            background-color: white;
+            border-radius: 15px;
             padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             width: 320px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             text-align: center;
         }
-        .stTextInput input {
+        .login-input .stTextInput > div > div > input {
             height: 35px;
             font-size: 14px;
+            border-radius: 6px;
             text-align: center;
         }
-        .stButton>button {
-            width: 100%;
-            height: 35px;
-            font-size: 14px;
-            border-radius: 20px;
+        .login-button .stButton > button {
             background: linear-gradient(to right, #667eea, #764ba2);
             color: white;
             border: none;
+            border-radius: 20px;
+            height: 36px;
+            font-size: 14px;
+            font-weight: bold;
         }
         </style>
         <div class="login-page">
@@ -85,20 +86,21 @@ def show_login():
                 <h3>Login</h3>
     """, unsafe_allow_html=True)
 
-    patient_id = st.text_input("Enter Patient ID")
+    st.markdown('<div class="login-input">', unsafe_allow_html=True)
+    patient_id = st.text_input("Enter Patient ID", key="login_patient_id")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    if st.button("Login"):
+    st.markdown('<div class="login-button">', unsafe_allow_html=True)
+    login_clicked = st.button("Login")
+    st.markdown("</div></div></div>", unsafe_allow_html=True)
+
+    if login_clicked:
         if patient_id in df["patient"].astype(str).values:
             st.session_state.logged_in = True
             st.session_state.patient_id = patient_id
             st.rerun()
         else:
             st.error("Invalid Patient ID. Please try again.")
-
-    st.markdown("</div></div>", unsafe_allow_html=True)
-
-
-
 
 def show_dashboard(patient_id):
     patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
