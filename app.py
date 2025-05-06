@@ -159,28 +159,33 @@ def show_dashboard(patient_id):
             st.markdown("</div>", unsafe_allow_html=True)
 
         with col3:
-            st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.markdown("### Top Risk Contributors")
-            preprocessor = model[:-1]
-            xgb_model = model.named_steps["classifier"]
-            input_df = input_df[model.feature_names_in_]
-            transformed = preprocessor.transform(input_df)
-            explainer = shap.TreeExplainer(xgb_model)
-            shap_values = explainer.shap_values(transformed)
-            feature_names = preprocessor.get_feature_names_out(model.feature_names_in_)
-            base_names = [f.split("__")[1].split("_")[0] if "__" in f else f for f in feature_names]
-            mean_abs = np.abs(shap_values).mean(axis=0)
-            importance = pd.DataFrame({"feature": base_names, "value": mean_abs}) \
-                         .groupby("feature")["value"].sum().sort_values(ascending=False)
-            labels = importance.head(top_k).index.tolist()
-            values = importance.head(top_k).values.tolist()
-            if len(importance) > top_k:
-                labels.append("Others")
-                values.append(importance.iloc[top_k:].sum())
-            pie = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.4)])
-            pie.update_layout(margin=dict(t=10, b=10, l=10, r=10), height=220)
-            st.plotly_chart(pie, use_container_width=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("### Top Risk Contributors")
+    model = joblib.load("Heart_Disease_Risk_Model_XGBoost.pkl")
+    input_df = pd.DataFrame([{k: latest[k] for k in [
+        "Weight_kg", "BMI", "Systolic_BP", "Diastolic_BP",
+        "Heart_Rate", "Smoking_Status", "Diabetes", "Hyperlipidemia", "AGE", "GENDER"]}])  # Excluded Height_cm
+    preprocessor = model[:-1]
+    xgb_model = model.named_steps["classifier"]
+    input_df = input_df[model.feature_names_in_]
+    transformed = preprocessor.transform(input_df)
+    explainer = shap.TreeExplainer(xgb_model)
+    shap_values = explainer.shap_values(transformed)
+    feature_names = preprocessor.get_feature_names_out(model.feature_names_in_)
+    base_names = [f.split("__")[1].split("_")[0] if "__" in f else f for f in feature_names]
+    mean_abs = np.abs(shap_values).mean(axis=0)
+    importance = pd.DataFrame({"feature": base_names, "value": mean_abs}) \
+                 .groupby("feature")["value"].sum().sort_values(ascending=False)
+    labels = importance.head(top_k).index.tolist()
+    values = importance.head(top_k).values.tolist()
+    if len(importance) > top_k:
+        labels.append("Others")
+        values.append(importance.iloc[top_k:].sum())
+    pie = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.4)])
+    pie.update_layout(margin=dict(t=10, b=10, l=10, r=10), height=220)
+    st.plotly_chart(pie, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
         # ------------------- Insights -------------------
         st.markdown("<div class='card full'>", unsafe_allow_html=True)
