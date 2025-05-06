@@ -1,3 +1,5 @@
+# ✅ Full corrected app.py with Height_cm excluded from SHAP but retained in prediction
+
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -50,18 +52,19 @@ if 'logged_in' not in st.session_state:
 
 def show_login():
     st.title("Welcome to HealthPredict")
-    st.markdown("<div style='display:flex; justify-content:center;'>", unsafe_allow_html=True)
-    patient_id = st.text_input("Enter Patient ID", max_chars=10, key="login_input")
-    st.markdown("</div>", unsafe_allow_html=True)
-    center_button = st.columns(3)
-    with center_button[1]:
-        if st.button("Login"):
-            if patient_id in df["patient"].astype(str).values:
-                st.session_state.logged_in = True
-                st.session_state.patient_id = patient_id
-                st.rerun()
-            else:
-                st.error("Invalid Patient ID. Please try again.")
+    st.markdown("""
+        <div style='display: flex; justify-content: center;'>
+            <div style='width: 300px;'>
+    """, unsafe_allow_html=True)
+    patient_id = st.text_input("Enter Patient ID")
+    st.markdown("""</div></div>""", unsafe_allow_html=True)
+    if st.button("Login"):
+        if patient_id in df["patient"].astype(str).values:
+            st.session_state.logged_in = True
+            st.session_state.patient_id = patient_id
+            st.rerun()
+        else:
+            st.error("Invalid Patient ID. Please try again.")
 
 def show_dashboard(patient_id):
     patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
@@ -81,20 +84,11 @@ def show_dashboard(patient_id):
 
             top_k = st.selectbox("Top SHAP Features", options=[2, 3, 4, 5, 6, 7, 8], index=2)
 
+        # 3 Cards Side by Side
         st.markdown("""
             <style>
-            .card {
-                background-color: #f2f2f2;
-                padding: 1.2rem;
-                border-radius: 10px;
-                box-shadow: 1px 1px 6px #ddd;
-                height: 100%;
-            }
-            .grid3 {
-                display: grid;
-                grid-template-columns: 1fr 1fr 1fr;
-                gap: 1rem;
-            }
+            .card { background-color: #f2f2f2; padding: 1.2rem; border-radius: 10px; box-shadow: 1px 1px 6px #ddd; }
+            .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
             </style>
         """, unsafe_allow_html=True)
 
@@ -104,43 +98,31 @@ def show_dashboard(patient_id):
             <div class='grid3'>
                 <div class='card'>
                     <h4>Patient Details</h4>
-                    ID: {id}<br>
-                    Age: {age}<br>
-                    Gender: {gender}<br>
-                    Height: {height} cm<br>
-                    Weight: {weight} kg
+                    ID: {id}<br>Age: {age}<br>Gender: {gender}<br>Height: {height} cm<br>Weight: {weight} kg
                 </div>
                 <div class='card'>
                     <h4>Health Metrics</h4>
-                    BMI: {bmi}<br>
-                    BP: {bp}<br>
-                    Heart Rate: {hr} bpm<br>
-                    Smoking: {smoking}
+                    BMI: {bmi}<br>BP: {bp}<br>Heart Rate: {hr} bpm<br>Smoking: {smoking}
                 </div>
                 <div class='card'>
                     <h4>Conditions</h4>
-                    Diabetes: {diabetes}<br>
-                    Hyperlipidemia: {lipid}<br>
-                    Heart Disease: {heart}
+                    Diabetes: {diabetes}<br>Hyperlipidemia: {lipid}<br>Heart Disease: {heart}
                 </div>
             </div>
         """.format(
             id=st.session_state.patient_id,
-            age=latest["AGE"],
-            gender=latest["GENDER"],
-            height=latest["Height_cm"],
-            weight=latest["Weight_kg"],
-            bmi=latest["BMI"],
-            bp=f"{latest['Systolic_BP']}/{latest['Diastolic_BP']}",
-            hr=latest["Heart_Rate"],
-            smoking=latest["Smoking_Status"],
+            age=latest["AGE"], gender=latest["GENDER"],
+            height=latest["Height_cm"], weight=latest["Weight_kg"],
+            bmi=latest["BMI"], bp=f"{latest['Systolic_BP']}/{latest['Diastolic_BP']}",
+            hr=latest["Heart_Rate"], smoking=latest["Smoking_Status"],
             diabetes="Yes" if latest["Diabetes"] else "No",
             lipid="Yes" if latest["Hyperlipidemia"] else "No",
             heart="Yes" if latest["Heart_Disease"] else "No"
         ), unsafe_allow_html=True)
 
-        # ------------------- Donut Charts + SHAP -------------------
+        # Donut Charts + SHAP
         col1, col2, col3 = st.columns([1, 1, 1])
+
         with col1:
             st.markdown("<div class='card'>", unsafe_allow_html=True)
             st.markdown("### Health Score")
@@ -154,7 +136,7 @@ def show_dashboard(patient_id):
             st.markdown("### Heart Risk")
             model = joblib.load("Heart_Disease_Risk_Model_XGBoost.pkl")
             input_df = pd.DataFrame([{k: latest[k] for k in [
-                "Weight_kg", "BMI", "Systolic_BP", "Diastolic_BP",
+                "Height_cm", "Weight_kg", "BMI", "Systolic_BP", "Diastolic_BP",
                 "Heart_Rate", "Smoking_Status", "Diabetes", "Hyperlipidemia", "AGE", "GENDER"]}])
             risk = model.predict_proba(input_df)[0][1] * 100
             label = "High Risk" if model.predict(input_df)[0] == 1 else "Low Risk"
@@ -167,11 +149,11 @@ def show_dashboard(patient_id):
             st.markdown("### Top Risk Contributors")
             preprocessor = model[:-1]
             xgb_model = model.named_steps["classifier"]
-            input_df = input_df[model.feature_names_in_]
-            transformed = preprocessor.transform(input_df)
+            shap_input_df = input_df.drop(columns=["Height_cm"])
+            transformed = preprocessor.transform(shap_input_df)
             explainer = shap.TreeExplainer(xgb_model)
             shap_values = explainer.shap_values(transformed)
-            feature_names = preprocessor.get_feature_names_out(model.feature_names_in_)
+            feature_names = preprocessor.get_feature_names_out(shap_input_df.columns)
             base_names = [f.split("__")[1].split("_")[0] if "__" in f else f for f in feature_names]
             mean_abs = np.abs(shap_values).mean(axis=0)
             importance = pd.DataFrame({"feature": base_names, "value": mean_abs}) \
@@ -186,7 +168,7 @@ def show_dashboard(patient_id):
             st.plotly_chart(pie, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
-        # ------------------- Insights -------------------
+        # Insights
         st.markdown("<div class='card full'>", unsafe_allow_html=True)
         st.markdown("### 💡 Insights & Recommendations")
         if score >= 80 and label == "Low Risk":
@@ -233,16 +215,14 @@ def show_dashboard(patient_id):
                 tips.append("• Monitor cholesterol.")
             if row["Diabetes"]:
                 tips.append("• Track glucose levels.")
-            st.markdown(
-                f"""
+            st.markdown(f"""
                 <div style='border:1px solid #ccc; border-radius:10px; padding:10px; background:#f9f9f9; margin:10px 0;'>
                 <b>Date:</b> {row['Date'].date()}<br>
                 <b>BMI:</b> {row['BMI']}, <b>BP:</b> {row['Systolic_BP']}/{row['Diastolic_BP']}, <b>HR:</b> {row['Heart_Rate']}<br>
                 <b>Health Score:</b> {row['Health Score']}, <b>Risk:</b> <span style='color:white; background:{color}; padding:2px 6px; border-radius:4px;'>{risk}</span><br>
                 <b>Tips:</b> <br>{'<br>'.join(tips)}
                 </div>
-                """, unsafe_allow_html=True
-            )
+            """, unsafe_allow_html=True)
 
     if st.button("Logout"):
         st.session_state.logged_in = False
