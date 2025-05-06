@@ -178,7 +178,7 @@ def show_dashboard(patient_id):
 
             importance_df = pd.DataFrame({"feature": base_names, "value": mean_abs})
             importance_df = importance_df.groupby("feature")["value"].sum().sort_values(ascending=False)
-            importance_df = importance_df.drop("Height_cm", errors="ignore")
+            importance_df = importance_df[~importance_df.index.str.lower().str.contains("height")]
 
             labels = importance_df.head(top_k).index.tolist()
             values = importance_df.head(top_k).values.tolist()
