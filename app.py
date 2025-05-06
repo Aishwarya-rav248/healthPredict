@@ -50,14 +50,18 @@ if 'logged_in' not in st.session_state:
 
 def show_login():
     st.title("Welcome to HealthPredict")
-    patient_id = st.text_input("Enter Patient ID")
-    if st.button("Login"):
-        if patient_id in df["patient"].astype(str).values:
-            st.session_state.logged_in = True
-            st.session_state.patient_id = patient_id
-            st.rerun()
-        else:
-            st.error("Invalid Patient ID. Please try again.")
+    st.markdown("<div style='display:flex; justify-content:center;'>", unsafe_allow_html=True)
+    patient_id = st.text_input("Enter Patient ID", max_chars=10, key="login_input")
+    st.markdown("</div>", unsafe_allow_html=True)
+    center_button = st.columns(3)
+    with center_button[1]:
+        if st.button("Login"):
+            if patient_id in df["patient"].astype(str).values:
+                st.session_state.logged_in = True
+                st.session_state.patient_id = patient_id
+                st.rerun()
+            else:
+                st.error("Invalid Patient ID. Please try again.")
 
 def show_dashboard(patient_id):
     patient_df = df[df["patient"].astype(str) == patient_id].sort_values("Date")
@@ -150,7 +154,7 @@ def show_dashboard(patient_id):
             st.markdown("### Heart Risk")
             model = joblib.load("Heart_Disease_Risk_Model_XGBoost.pkl")
             input_df = pd.DataFrame([{k: latest[k] for k in [
-                "Height_cm", "Weight_kg", "BMI", "Systolic_BP", "Diastolic_BP",
+                "Weight_kg", "BMI", "Systolic_BP", "Diastolic_BP",
                 "Heart_Rate", "Smoking_Status", "Diabetes", "Hyperlipidemia", "AGE", "GENDER"]}])
             risk = model.predict_proba(input_df)[0][1] * 100
             label = "High Risk" if model.predict(input_df)[0] == 1 else "Low Risk"
@@ -159,33 +163,28 @@ def show_dashboard(patient_id):
             st.markdown("</div>", unsafe_allow_html=True)
 
         with col3:
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("### Top Risk Contributors")
-    model = joblib.load("Heart_Disease_Risk_Model_XGBoost.pkl")
-    input_df = pd.DataFrame([{k: latest[k] for k in [
-        "Weight_kg", "BMI", "Systolic_BP", "Diastolic_BP",
-        "Heart_Rate", "Smoking_Status", "Diabetes", "Hyperlipidemia", "AGE", "GENDER"]}])  # Excluded Height_cm
-    preprocessor = model[:-1]
-    xgb_model = model.named_steps["classifier"]
-    input_df = input_df[model.feature_names_in_]
-    transformed = preprocessor.transform(input_df)
-    explainer = shap.TreeExplainer(xgb_model)
-    shap_values = explainer.shap_values(transformed)
-    feature_names = preprocessor.get_feature_names_out(model.feature_names_in_)
-    base_names = [f.split("__")[1].split("_")[0] if "__" in f else f for f in feature_names]
-    mean_abs = np.abs(shap_values).mean(axis=0)
-    importance = pd.DataFrame({"feature": base_names, "value": mean_abs}) \
-                 .groupby("feature")["value"].sum().sort_values(ascending=False)
-    labels = importance.head(top_k).index.tolist()
-    values = importance.head(top_k).values.tolist()
-    if len(importance) > top_k:
-        labels.append("Others")
-        values.append(importance.iloc[top_k:].sum())
-    pie = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.4)])
-    pie.update_layout(margin=dict(t=10, b=10, l=10, r=10), height=220)
-    st.plotly_chart(pie, use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            st.markdown("### Top Risk Contributors")
+            preprocessor = model[:-1]
+            xgb_model = model.named_steps["classifier"]
+            input_df = input_df[model.feature_names_in_]
+            transformed = preprocessor.transform(input_df)
+            explainer = shap.TreeExplainer(xgb_model)
+            shap_values = explainer.shap_values(transformed)
+            feature_names = preprocessor.get_feature_names_out(model.feature_names_in_)
+            base_names = [f.split("__")[1].split("_")[0] if "__" in f else f for f in feature_names]
+            mean_abs = np.abs(shap_values).mean(axis=0)
+            importance = pd.DataFrame({"feature": base_names, "value": mean_abs}) \
+                         .groupby("feature")["value"].sum().sort_values(ascending=False)
+            labels = importance.head(top_k).index.tolist()
+            values = importance.head(top_k).values.tolist()
+            if len(importance) > top_k:
+                labels.append("Others")
+                values.append(importance.iloc[top_k:].sum())
+            pie = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.4)])
+            pie.update_layout(margin=dict(t=10, b=10, l=10, r=10), height=220)
+            st.plotly_chart(pie, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
         # ------------------- Insights -------------------
         st.markdown("<div class='card full'>", unsafe_allow_html=True)
@@ -212,7 +211,6 @@ def show_dashboard(patient_id):
             st.write("• Hyperlipidemia – adopt a low-fat diet.")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # ------------------- Visit History -------------------
     with tab2:
         st.markdown("## Visit History")
         st.info(f"Total Visits: {len(patient_df)} | Avg. Health Score: {round(patient_df['Health Score'].mean(), 1)}")
